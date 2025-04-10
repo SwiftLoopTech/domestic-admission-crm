@@ -33,7 +33,6 @@ export function LoginForm({
     if (error) {
       setError(error.message);
     } else {
-      // Redirect to dashboard on successful login
       window.location.href = "/dashboard";
     }
   };

@@ -15,7 +15,6 @@ import { Label } from "@/components/ui/label";
 export default function SignupPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -51,12 +50,12 @@ export default function SignupPage() {
     }
 
     // Insert user details into the profiles table
-    const { error: dbError } = await supabase.from("profiles").insert([
+    const { error: dbError } = await supabase.from("agents").insert([
       {
         user_id: user.id, // Use the retrieved user ID
         name,
-        role: "agent",
         email: trimmedEmail,
+        super_agent: null,
       },
     ]);
 
