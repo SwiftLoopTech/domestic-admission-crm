@@ -87,9 +87,9 @@ export function Sidebar({ onSignOut, userRole }: SidebarProps) {
   const userName = "John Doe"; // Replace with actual user name
 
   const sidebarContent = (
-    <div className="flex h-full flex-col bg-white">
+    <div className="flex h-full flex-col bg-teal-50">
       {/* Header with user info */}
-      <div className="p-6 border-b bg-gradient-to-r from-teal-500 to-cyan-600">
+      <div className="p-6  bg-gradient-to-r from-teal-500 to-cyan-600">
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10 border-2 border-white/20">
             <AvatarImage src="" alt={userName} />
@@ -125,7 +125,7 @@ export function Sidebar({ onSignOut, userRole }: SidebarProps) {
                         "flex items-center justify-between h-10 px-3 py-2 text-sm rounded-lg transition-all duration-200",
                         "hover:bg-teal-50 hover:text-teal-700",
                         isActive
-                          ? "bg-teal-50 text-teal-700 font-medium shadow-sm"
+                          ? "bg-teal-100 text-teal-700 font-medium shadow-sm"
                           : "text-gray-600"
                       )}
                       onClick={() => setOpen(false)}
@@ -151,7 +151,7 @@ export function Sidebar({ onSignOut, userRole }: SidebarProps) {
       </ScrollArea>
 
       {/* Footer with sign out button */}
-      <div className="p-4 border-t mt-auto">
+      <div className="p-4  mt-auto">
         <Button
           variant="outline"
           className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
@@ -184,7 +184,7 @@ export function Sidebar({ onSignOut, userRole }: SidebarProps) {
       </div>
 
       {/* Desktop sidebar - hidden on mobile */}
-      <aside className="hidden lg:flex w-72 border-r h-screen flex-col bg-white">
+      <aside className="hidden lg:flex w-72  h-screen flex-col bg-white">
         {sidebarContent}
       </aside>
     </>
