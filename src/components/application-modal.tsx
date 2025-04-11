@@ -104,14 +104,14 @@ export function ApplicationModal({ subagents = [], onApplicationCreated }: Appli
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild className="border-[1px] border-black hover:cursor-pointer hover:shadow-md">
-        <Button>
+      <DialogTrigger asChild>
+        <Button className="border-[1px] border-black hover:cursor-pointer hover:shadow-md">
           <PlusCircle className="mr-2 h-4 w-4" />
           New Application
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[600px] bg-white">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Create New Application</DialogTitle>
           <DialogDescription>
