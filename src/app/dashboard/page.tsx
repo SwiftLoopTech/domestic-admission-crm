@@ -3,11 +3,26 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ApplicationModal } from "@/components/application-modal";
+import { getSubagents } from "@/services/agents";
+import { useQuery } from "@tanstack/react-query";
 
 export default function DashboardPage() {
-  const { userRole, isLoading, error } = useUserRole();
+  const { userRole, isLoading: isLoadingRole, error } = useUserRole();
   
-  if (isLoading) {
+  // Fetch subagents if user is an agent
+  const { data: subagents = [] } = useQuery({
+    queryKey: ['subagents'],
+    queryFn: getSubagents,
+    enabled: userRole === 'agent'
+  });
+  
+  const handleApplicationCreated = () => {
+    // You could refresh dashboard data here if needed
+    console.log("Application created successfully");
+  };
+  
+  if (isLoadingRole) {
     return <DashboardSkeleton />;
   }
   
@@ -22,9 +37,16 @@ export default function DashboardPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-bold mb-4">
-        {userRole === "agent" ? "Agent Dashboard" : "Sub-Agent Dashboard"}
-      </h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">
+          {userRole === "agent" ? "Agent Dashboard" : "Sub-Agent Dashboard"}
+        </h1>
+        
+        <ApplicationModal 
+          subagents={subagents}
+          onApplicationCreated={handleApplicationCreated}
+        />
+      </div>
       
       {userRole === "agent" ? (
         <div>
