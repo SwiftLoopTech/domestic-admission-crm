@@ -112,7 +112,7 @@ export function ApplicationModal({ subagents = [], onApplicationCreated }: Appli
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-[600px] bg-white">
-        <DialogHeader>
+        <DialogHeader className="border-b">
           <DialogTitle>Create New Application</DialogTitle>
           <DialogDescription>
             Fill in the form below to create a new student application.
