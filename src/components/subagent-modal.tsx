@@ -4,14 +4,14 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogFooter, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { createSubagent } from "@/services/agents";
+import { useSubagents } from "@/hooks/useSubagents";
 
 // Define form schema with Zod
 const subagentSchema = z.object({
@@ -30,6 +30,7 @@ interface SubagentModalProps {
 export function SubagentModal({ onSubagentCreated }: SubagentModalProps) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { createSubagent, isCreating } = useSubagents();
 
   // Initialize form with react-hook-form
   const form = useForm<SubagentFormValues>({
@@ -41,34 +42,22 @@ export function SubagentModal({ onSubagentCreated }: SubagentModalProps) {
     },
   });
 
-  async function onSubmit(data: SubagentFormValues) {
-    setIsSubmitting(true);
+  function onSubmit(data: SubagentFormValues) {
+    // Use the mutation to create the subagent
+    createSubagent(data, {
+      onSuccess: () => {
+        // Close the modal
+        setOpen(false);
 
-    try {
-      // Call the API service to create the subagent
-      await createSubagent(data);
+        // Reset form
+        form.reset();
 
-      // Show success message
-      toast.success(
-        "Subagent created successfully. They will need to confirm their email before logging in."
-      );
-
-      // Close the modal
-      setOpen(false);
-
-      // Reset form
-      form.reset();
-
-      // Trigger callback if provided
-      if (onSubagentCreated) {
-        onSubagentCreated();
+        // Trigger callback if provided
+        if (onSubagentCreated) {
+          onSubagentCreated();
+        }
       }
-    } catch (error) {
-      console.error("Error creating subagent:", error);
-      toast.error("Failed to create subagent. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    });
   }
 
   return (
@@ -151,9 +140,16 @@ export function SubagentModal({ onSubagentCreated }: SubagentModalProps) {
               <Button
                 type="submit"
                 variant="outline"
-                disabled={isSubmitting}
+                disabled={isCreating}
               >
-                {isSubmitting ? "Creating..." : "Create Subagent"}
+                {isCreating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  "Create Subagent"
+                )}
               </Button>
             </DialogFooter>
           </form>

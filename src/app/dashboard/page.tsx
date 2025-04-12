@@ -9,14 +9,6 @@ import { ApplicationModal } from "@/components/application-modal";
 export default function DashboardPage() {
   const { userRole, isLoading: isLoadingRole, error: roleError } = useUserRole();
   const { stats, isLoading: isLoadingStats, error: statsError } = useDashboardStats();
-
-  // No need to fetch subagents here anymore, the modal handles it internally
-
-  const handleApplicationCreated = () => {
-    // Refresh the page to update stats
-    window.location.reload();
-  };
-
   const isLoading = isLoadingRole || isLoadingStats;
   const error = roleError || statsError;
 
@@ -40,9 +32,7 @@ export default function DashboardPage() {
           {userRole === "agent" ? "Agent Dashboard" : "Sub-Agent Dashboard"}
         </h1>
 
-        <ApplicationModal
-          onApplicationCreated={handleApplicationCreated}
-        />
+        <ApplicationModal/>
       </div>
 
       {userRole === "agent" ? (

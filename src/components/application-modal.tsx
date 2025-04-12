@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Loader2 } from "lucide-react";
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogFooter, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSubagents } from "@/hooks/useSubagents";
-import { createApplication } from "@/services/applications";
+import { useApplications } from "@/hooks/useApplications";
 import { getCurrentUserId } from "@/utils/agents.supabase";
 
 // Define form schema with Zod
@@ -45,15 +45,12 @@ const courses = [
   { id: "4", name: "Medicine" },
 ];
 
-interface ApplicationModalProps {
-  onApplicationCreated?: () => void;
-}
 
-export function ApplicationModal({ onApplicationCreated }: ApplicationModalProps) {
+export function ApplicationModal() {
   const [open, setOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { userRole } = useUserRole();
   const { subagents, isLoading: isLoadingSubagents } = useSubagents();
+  const { createApplication, isCreating } = useApplications();
 
   // Initialize form with react-hook-form
   const form = useForm<ApplicationFormValues>({
@@ -70,11 +67,7 @@ export function ApplicationModal({ onApplicationCreated }: ApplicationModalProps
   });
 
   async function onSubmit(data: ApplicationFormValues) {
-    setIsSubmitting(true);
-
     try {
-      // Call the API service to create the application
-      // If user is a sub-agent, automatically set the subagent_id to their own ID
       // Get the current user's ID using our utility function
       const currentUserId = await getCurrentUserId();
 
@@ -87,26 +80,19 @@ export function ApplicationModal({ onApplicationCreated }: ApplicationModalProps
         application_status: "processing",
       };
 
-      await createApplication(applicationData);
+      // Use the mutation to create the application
+      createApplication(applicationData, {
+        onSuccess: () => {
+          // Close the modal
+          setOpen(false);
 
-      // Show success message
-      toast.success("Application created successfully");
-
-      // Close the modal
-      setOpen(false);
-
-      // Reset form
-      form.reset();
-
-      // Trigger callback if provided
-      if (onApplicationCreated) {
-        onApplicationCreated();
-      }
+          // Reset form
+          form.reset();
+        }
+      });
     } catch (error) {
-      console.error("Error creating application:", error);
-      toast.error("Failed to create application. Please try again.");
-    } finally {
-      setIsSubmitting(false);
+      console.error("Error preparing application data:", error);
+      toast.error(`Failed to prepare application data: ${(error as Error).message}`);
     }
   }
 
@@ -306,9 +292,16 @@ export function ApplicationModal({ onApplicationCreated }: ApplicationModalProps
               <Button
                 type="submit"
                 variant="outline"
-                disabled={isSubmitting}
+                disabled={isCreating}
               >
-                {isSubmitting ? "Creating..." : "Create Application"}
+                {isCreating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  "Create Application"
+                )}
               </Button>
             </DialogFooter>
           </form>

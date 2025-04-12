@@ -91,10 +91,7 @@ export default function ApplicationsPage() {
           </DropdownMenu>
 
           {/* Add Application Modal */}
-          <ApplicationModal onApplicationCreated={() => {
-            // Refetch applications when a new one is created
-            window.location.reload();
-          }} />
+          <ApplicationModal />
         </div>
       </div>
 
