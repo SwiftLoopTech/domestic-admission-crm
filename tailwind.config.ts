@@ -1,5 +1,4 @@
 import type { Config } from 'tailwindcss';
-import colors from 'tailwindcss/colors';
 import headlessUi from '@headlessui/tailwindcss';
 import tailwindForms from '@tailwindcss/forms';
 import tailwindAnimate from 'tailwindcss-animate';
@@ -8,6 +7,7 @@ const config: Config = {
   darkMode: ['class', 'dark'],
   content: [
     './src/**/*.{js,ts,jsx,tsx}',
+    './src/components/ui/*.tsx',
     './node_modules/@tremor/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
@@ -15,7 +15,7 @@ const config: Config = {
       colors: {
         transparent: 'transparent',
         current: 'currentColor',
-        background: /* 'hsl(var(--background))' */ colors.white,
+        background: 'hsl(var(--background))' ,
         foreground: 'hsl(var(--foreground))',
         card: {
           DEFAULT: 'hsl(var(--card))',
