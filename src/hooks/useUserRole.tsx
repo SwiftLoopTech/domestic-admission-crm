@@ -2,7 +2,7 @@
 
 import { createContext, useContext, ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/utils/supabase";
+import { getUserRole } from "@/utils/agents.supabase";
 
 type UserRole = "agent" | "sub-agent" | null;
 
@@ -21,34 +21,23 @@ const UserRoleContext = createContext<UserRoleContextType>({
 });
 
 async function fetchUserRole(): Promise<UserRole> {
-  // Get the session
-  const { data: { session } } = await supabase.auth.getSession();
-  
-  if (!session) return null;
-  
-  const userEmail = session.user.email;
-  
-  // Query the agents table
-  const { data: agentData, error } = await supabase
-    .from('agents')
-    .select('super_agent')
-    .eq('email', userEmail)
-    .single();
-  
-  if (error) {
-    throw new Error(`Failed to fetch user role: ${error.message}`);
+  try {
+    // Use the getUserRole function from agents.supabase.ts
+    const { role } = await getUserRole();
+    return role;
+  } catch (error) {
+    console.error("Error fetching user role:", error);
+    throw error;
   }
-  
-  return agentData.super_agent === null ? "agent" : "sub-agent";
 }
 
-export function UserRoleProvider({ 
-  children 
-}: { 
-  children: ReactNode 
+export function UserRoleProvider({
+  children
+}: {
+  children: ReactNode
 }) {
-  const { 
-    data: userRole = null, 
+  const {
+    data: userRole = null,
     isLoading,
     error,
     refetch
@@ -59,14 +48,14 @@ export function UserRoleProvider({
     retry: 1,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
-  
+
   const contextValue: UserRoleContextType = {
     userRole,
     isLoading,
     error: error as Error | null,
     refetch,
   };
-  
+
   return (
     <UserRoleContext.Provider value={contextValue}>
       {children}

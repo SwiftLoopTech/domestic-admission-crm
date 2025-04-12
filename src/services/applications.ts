@@ -16,13 +16,13 @@ export async function createApplication(data: ApplicationInput) {
   try {
     // Get current user's ID
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session) {
       throw new Error("No authenticated user found");
     }
-    
+
     const userId = session.user.id;
-    
+
     // Determine if user is an agent or subagent
     // Important: Use eq() on the user_id field
     const { data: agentData, error: agentError } = await supabase
@@ -30,19 +30,19 @@ export async function createApplication(data: ApplicationInput) {
       .select('super_agent, user_id')
       .eq('user_id', userId)
       .single();
-    
+
     if (agentError) {
       console.error('Error fetching agent data:', agentError);
       throw new Error(`Failed to fetch agent data: ${agentError.message}`);
     }
-    
+
     if (!agentData) {
       throw new Error("No agent record found for this user");
     }
-    
+
     // Determine which partition to insert into based on the hierarchy
     let superAgentId: string;
-    
+
     if (agentData.super_agent === null) {
       // This is a main agent
       superAgentId = agentData.user_id;
@@ -50,61 +50,40 @@ export async function createApplication(data: ApplicationInput) {
       // This is a subagent
       superAgentId = agentData.super_agent;
     }
-    
-    // Generate the table name with the partition
-    const tableName = `applications_${superAgentId}`;
-    
-    // First create the partition table if it doesn't exist
-    const { error: createPartitionError } = await supabase
-      .rpc('create_application_partition', { 
-        superagent_id: superAgentId 
-      });
-    
-    if (createPartitionError) {
-      console.error('Error creating partition:', createPartitionError);
-      throw new Error(`Failed to create partition: ${createPartitionError.message}`);
-    }
-    
-    // Wait a brief moment for the table to be ready
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Register the partition if not already registered
-    const { error: registryError } = await supabase
-      .from('applications_registry')
-      .upsert({ 
-        superagent_id: superAgentId 
-      }, { 
-        onConflict: 'superagent_id' 
-      });
-    
-    if (registryError) {
-      console.error('Error registering partition:', registryError);
-      throw new Error(`Failed to register partition: ${registryError.message}`);
-    }
-    
-    // Now insert the application into the partition
+
+    // Instead of using partitioned tables, let's use a simpler approach for now
+    // We'll use a single applications table with a superagent_id column
+    console.log('Using main applications table with superagent_id:', superAgentId);
+
+    // Create the application data object
+    const applicationData = {
+      id: uuidv4(),
+      student_name: data.student_name,
+      email: data.email,
+      phone: data.phone,
+      preferred_college: data.preferred_college,
+      preferred_course: data.preferred_course,
+      application_status: data.application_status,
+      notes: data.notes || null,
+      created_by: agentData.user_id, // Use agent ID, not user ID
+      subagent_id: data.subagent_id || null,
+      superagent_id: superAgentId // Add the superagent_id to filter applications
+    };
+
+    console.log('Application data:', applicationData);
+
+    // Insert directly into the applications table
     const { data: application, error: insertError } = await supabase
-      .from(tableName)
-      .insert({
-        id: uuidv4(),
-        student_name: data.student_name,
-        email: data.email,
-        phone: data.phone,
-        preferred_college: data.preferred_college,
-        preferred_course: data.preferred_course,
-        application_status: data.application_status,
-        notes: data.notes || null,
-        created_by: agentData.user_id, // Use agent ID, not user ID
-        subagent_id: data.subagent_id || null,
-      })
+      .from('applications')
+      .insert(applicationData)
       .select()
       .single();
-    
+
     if (insertError) {
       console.error('Error inserting application:', insertError);
-      throw new Error(`Failed to create application: ${insertError.message}`);
+      throw new Error(`Failed to create application: ${insertError.message || 'Database error'}`);
     }
-    
+
     return application;
   } catch (error) {
     console.error('Create application error:', error);
@@ -115,81 +94,58 @@ export async function createApplication(data: ApplicationInput) {
 export async function getApplications() {
   // Get current user's ID
   const { data: { session } } = await supabase.auth.getSession();
-  
+
   if (!session) {
     throw new Error("No authenticated user found");
   }
-  
+
   const userId = session.user.id;
-  
+
   // Get the agent data
   const { data: agentData, error: agentError } = await supabase
     .from('agents')
     .select('super_agent, user_id')
     .eq('user_id', userId)
     .single();
-  
+
   if (agentError) {
     throw new Error(`Failed to fetch agent data: ${agentError.message}`);
   }
-  
+
   // Determine if this is a main agent or subagent
-  let superAgentId: string;
   let applications = [];
-  
+
   if (agentData.super_agent === null) {
-    // This is a main agent - get applications from their partition
-    superAgentId = agentData.user_id;
-    const tableName = `applications_${superAgentId}`;
-    
-    // Check if the table exists
-    const { error: tableCheckError } = await supabase
-      .from('applications_registry')
-      .select('superagent_id')
-      .eq('superagent_id', superAgentId)
-      .single();
-    
-    if (!tableCheckError) {
-      // Table exists, fetch applications
-      const { data, error } = await supabase
-        .from(tableName)
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        throw new Error(`Failed to fetch applications: ${error.message}`);
-      }
-      
-      applications = data || [];
+    // This is a main agent - get all applications where superagent_id equals their user_id
+    const { data, error } = await supabase
+      .from('applications')
+      .select('*')
+      .eq('superagent_id', agentData.user_id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching applications:', error);
+      throw new Error(`Failed to fetch applications: ${error.message}`);
     }
+
+    applications = data || [];
   } else {
-    // This is a subagent - get applications from their super agent's partition
+    // This is a subagent - get applications from their super agent
     // but only those assigned to this subagent or created by this subagent
-    superAgentId = agentData.super_agent;
-    const tableName = `applications_${superAgentId}`;
-    
-    // Check if the table exists
-    const { error: tableCheckError } = await supabase
-      .from('applications_registry')
-      .select('superagent_id')
-      .eq('superagent_id', superAgentId)
-      .single();
-    
-    if (!tableCheckError) {
-      // Table exists, fetch applications assigned to this subagent or created by them
-      const { data, error } = await supabase
-        .from(tableName)
-        .select('*')
-        .or(`subagent_id.eq.${agentData.user_id},created_by.eq.${agentData.user_id}`)
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        throw new Error(`Failed to fetch applications: ${error.message}`);
-      }
-      
-      applications = data || [];
+    const { data, error } = await supabase
+      .from('applications')
+      .select('*')
+      .eq('superagent_id', agentData.super_agent)
+      .or(`subagent_id.eq.${agentData.user_id},created_by.eq.${agentData.user_id}`)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching applications:', error);
+      throw new Error(`Failed to fetch applications: ${error.message}`);
     }
+
+    applications = data || [];
   }
-  
+
   return applications;
 }

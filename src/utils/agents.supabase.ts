@@ -1,5 +1,13 @@
 import { supabase } from "@/utils/supabase";
 
+export interface AgentData {
+  user_id: string;
+  name: string;
+  email: string;
+  created_at: string;
+  super_agent: string | null;
+}
+
 interface SubagentInput {
   name: string;
   email: string;
@@ -14,13 +22,18 @@ interface SubagentInput {
 export async function createSubagent(data: SubagentInput) {
   try {
     // Get current user's ID (the agent)
-    const { data: { session } } = await supabase.auth.getSession();
+    const userId = await getCurrentUserId();
 
-    if (!session) {
+    if (!userId) {
       throw new Error("No authenticated user found");
     }
 
-    const userId = session.user.id;
+    // Get the current session
+    const session = await getCurrentSession();
+
+    if (!session) {
+      throw new Error("No authenticated session found");
+    }
 
     // Store the current session token to restore it later
     const currentSession = session;
@@ -87,22 +100,80 @@ export async function createSubagent(data: SubagentInput) {
  * Gets all subagents for the current authenticated user
  * @returns An array of subagent records
  */
+/**
+ * Gets the current authenticated user's session
+ * @returns The user session or null if not authenticated
+ */
+export async function getCurrentSession() {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session;
+}
+
+/**
+ * Gets the current user's ID
+ * @returns The user ID or null if not authenticated
+ */
+export async function getCurrentUserId() {
+  const session = await getCurrentSession();
+  return session?.user?.id || null;
+}
+
+/**
+ * Gets the agent data for the current user
+ * @returns The agent data or null if not found
+ */
+export async function getAgentData(): Promise<AgentData | null> {
+  const userId = await getCurrentUserId();
+
+  if (!userId) {
+    return null;
+  }
+
+  // Fetch the agent data from the agents table
+  const { data, error } = await supabase
+    .from('agents')
+    .select('user_id, name, email, created_at, super_agent')
+    .eq('user_id', userId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching agent data:", error);
+    throw new Error(`Failed to fetch agent data: ${error.message}`);
+  }
+
+  return data;
+}
+
+/**
+ * Determines if the current user is an agent or subagent
+ * @returns An object with the user role and agent data
+ */
+export async function getUserRole() {
+  const agentData = await getAgentData();
+
+  if (!agentData) {
+    return { role: null, agent: null };
+  }
+
+  const role = agentData.super_agent === null ? "agent" : "sub-agent";
+
+  return { role, agent: agentData };
+}
+
 export async function getSubagents() {
   try {
     // Get current user's ID (the agent)
-    const { data: { session } } = await supabase.auth.getSession();
+    const userId = await getCurrentUserId();
 
-    if (!session) {
+    if (!userId) {
       throw new Error("No authenticated user found");
     }
-
-    const agentId = session.user.id;
 
     // Get all subagents for this agent
     const { data, error } = await supabase
       .from('agents')
       .select('user_id, name, email, created_at')
-      .eq('super_agent', agentId);
+      .eq('super_agent', userId);
 
     if (error) {
       console.error("Error fetching subagents:", error);

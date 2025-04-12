@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   LucideHome,
   LucideUsers,
@@ -10,9 +11,10 @@ import {
   LucideLogOut,
   LucideUserPlus,
   LucideMenu,
-  LucideX,
-  LucideChevronRight
+  LucideChevronRight,
+  LucideLoader2
 } from "lucide-react";
+import { supabase } from "@/utils/supabase";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -20,7 +22,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
   Tooltip,
-  TooltipContent,
   TooltipProvider,
   TooltipTrigger
 } from "@/components/ui/tooltip";
@@ -32,15 +33,26 @@ import {
   SheetTitle
 } from "@/components/ui/sheet";
 import { VisuallyHidden } from "@/components/ui/visually-hidden";
+import { useAgentData } from "@/hooks/useAgentData";
 
 interface SidebarProps {
-  onSignOut: () => Promise<void>;
   userRole: "agent" | "sub-agent" | null;
 }
 
-export function Sidebar({ onSignOut, userRole }: SidebarProps) {
+export function Sidebar({ userRole }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+
+  // Handle sign out
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      router.push("/login");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
 
   // Define navigation items based on user role
   const getNavItems = () => {
@@ -78,8 +90,15 @@ export function Sidebar({ onSignOut, userRole }: SidebarProps) {
   };
 
   const navItems = getNavItems();
-  const userInitials = userRole === "agent" ? "AG" : "SA";
-  const userName = userRole === "agent" ? "Agent" : "Sub-Agent";
+  const { agent, isLoading: isLoadingAgent } = useAgentData();
+
+  // Get user initials from name or fallback
+  const userInitials = agent?.name
+    ? agent.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2)
+    : userRole === "agent" ? "AG" : "SA";
+
+  // Get user name from agent data or fallback
+  const userName = agent?.name || (userRole === "agent" ? "Agent" : "Sub-Agent");
 
   const sidebarContent = (
     <div className="flex h-full flex-col bg-white text-sidebar-foreground">
@@ -89,11 +108,13 @@ export function Sidebar({ onSignOut, userRole }: SidebarProps) {
           <Avatar>
             <AvatarImage src="" alt={userName} />
             <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground">
-              {userInitials}
+              {isLoadingAgent ? <LucideLoader2 className="h-4 w-4 animate-spin" /> : userInitials}
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
-            <span className="text-sm font-semibold truncate">{userName}</span>
+            <span className="text-sm font-semibold truncate">
+              {isLoadingAgent ? "Loading..." : userName}
+            </span>
             <span className="text-xs text-muted-foreground">
               {userRole === "agent" ? "Administrator" : "Limited access"}
             </span>
@@ -146,7 +167,7 @@ export function Sidebar({ onSignOut, userRole }: SidebarProps) {
         <Button
           variant="destructive"
           className="w-full hover:cursor-pointer text-black"
-          onClick={onSignOut}
+          onClick={handleSignOut}
         >
           <LucideLogOut className="mr-2 h-4 w-4" />
           Sign out

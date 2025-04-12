@@ -2,30 +2,28 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApplicationModal } from "@/components/application-modal";
-import { getSubagents } from "@/services/agents";
-import { useQuery } from "@tanstack/react-query";
 
 export default function DashboardPage() {
-  const { userRole, isLoading: isLoadingRole, error } = useUserRole();
-  
-  // Fetch subagents if user is an agent
-  const { data: subagents = [] } = useQuery({
-    queryKey: ['subagents'],
-    queryFn: getSubagents,
-    enabled: userRole === 'agent'
-  });
-  
+  const { userRole, isLoading: isLoadingRole, error: roleError } = useUserRole();
+  const { stats, isLoading: isLoadingStats, error: statsError } = useDashboardStats();
+
+  // No need to fetch subagents here anymore, the modal handles it internally
+
   const handleApplicationCreated = () => {
-    // You could refresh dashboard data here if needed
-    console.log("Application created successfully");
+    // Refresh the page to update stats
+    window.location.reload();
   };
-  
-  if (isLoadingRole) {
+
+  const isLoading = isLoadingRole || isLoadingStats;
+  const error = roleError || statsError;
+
+  if (isLoading) {
     return <DashboardSkeleton />;
   }
-  
+
   if (error) {
     return (
       <div className="p-6 bg-red-50 border border-red-200 rounded-md">
@@ -41,13 +39,12 @@ export default function DashboardPage() {
         <h1 className="text-2xl font-bold">
           {userRole === "agent" ? "Agent Dashboard" : "Sub-Agent Dashboard"}
         </h1>
-        
-        <ApplicationModal 
-          subagents={subagents}
+
+        <ApplicationModal
           onApplicationCreated={handleApplicationCreated}
         />
       </div>
-      
+
       {userRole === "agent" ? (
         <div>
           <p className="mb-4">Welcome to your agent dashboard! You have full access to all features.</p>
@@ -58,19 +55,19 @@ export default function DashboardPage() {
                 <CardTitle className="text-sm font-medium">Total Applications</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold">0</p>
+                <p className="text-2xl font-bold">{stats.applicationsCount}</p>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">Sub-Agents</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold">0</p>
+                <p className="text-2xl font-bold">{stats.subagentsCount}</p>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
@@ -91,10 +88,10 @@ export default function DashboardPage() {
                 <CardTitle className="text-sm font-medium">My Applications</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold">0</p>
+                <p className="text-2xl font-bold">{stats.applicationsCount}</p>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
@@ -116,7 +113,7 @@ function DashboardSkeleton() {
     <>
       <Skeleton className="h-8 w-64 mb-4" />
       <Skeleton className="h-5 w-full max-w-md mb-4" />
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {[1, 2, 3].map((i) => (
           <Card key={i}>

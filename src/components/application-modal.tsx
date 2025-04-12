@@ -14,7 +14,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useSubagents } from "@/hooks/useSubagents";
 import { createApplication } from "@/services/applications";
+import { getCurrentUserId } from "@/utils/agents.supabase";
 
 // Define form schema with Zod
 const applicationSchema = z.object({
@@ -44,14 +46,14 @@ const courses = [
 ];
 
 interface ApplicationModalProps {
-  subagents?: { user_id: string; name: string }[];
   onApplicationCreated?: () => void;
 }
 
-export function ApplicationModal({ subagents = [], onApplicationCreated }: ApplicationModalProps) {
+export function ApplicationModal({ onApplicationCreated }: ApplicationModalProps) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { userRole } = useUserRole();
+  const { subagents, isLoading: isLoadingSubagents } = useSubagents();
 
   // Initialize form with react-hook-form
   const form = useForm<ApplicationFormValues>({
@@ -72,10 +74,16 @@ export function ApplicationModal({ subagents = [], onApplicationCreated }: Appli
 
     try {
       // Call the API service to create the application
+      // If user is a sub-agent, automatically set the subagent_id to their own ID
+      // Get the current user's ID using our utility function
+      const currentUserId = await getCurrentUserId();
+
       const applicationData = {
         ...data,
-        // Convert "self" value to null for the API
-        subagent_id: data.subagent_id === "self" ? null : data.subagent_id,
+        // For sub-agents, always use their own ID
+        // For agents, use the selected subagent_id or null
+        subagent_id: userRole === "sub-agent" ? currentUserId :
+                    (data.subagent_id === "self" ? null : data.subagent_id),
         application_status: "processing",
       };
 
@@ -170,7 +178,7 @@ export function ApplicationModal({ subagents = [], onApplicationCreated }: Appli
               />
 
               {/* Subagent selector (only for agents) */}
-              {userRole === "agent" && subagents.length > 0 && (
+              {userRole === "agent" && !isLoadingSubagents && subagents.length > 0 && (
                 <FormField
                   control={form.control}
                   name="subagent_id"
