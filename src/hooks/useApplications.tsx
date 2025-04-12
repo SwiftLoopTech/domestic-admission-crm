@@ -1,8 +1,10 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getApplications, createApplication } from "@/services/applications";
+import { getApplications, createApplication, updateApplicationStatus } from "@/services/applications";
 import { toast } from "sonner";
+import { isValidStatusTransition } from "@/utils/application-status";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface ApplicationInput {
   student_name: string;
@@ -17,6 +19,7 @@ interface ApplicationInput {
 
 export function useApplications() {
   const queryClient = useQueryClient();
+  const { userRole } = useUserRole();
 
   // Query for fetching applications
   const {
@@ -53,6 +56,55 @@ export function useApplications() {
     },
   });
 
+  // Mutation for updating application status
+  const { mutate: updateStatusMutation, isPending: isUpdatingStatus } = useMutation({
+    mutationFn: ({ applicationId, newStatus }: { applicationId: string, newStatus: string }) => {
+      // Get the current application to check if the status transition is valid
+      const currentApplication = applications.find(app => app.id === applicationId);
+
+      if (!currentApplication) {
+        throw new Error("Application not found");
+      }
+
+      // Determine if user is an agent
+      const isAgent = userRole === "agent";
+
+      // Check if the status transition is valid based on user role
+      // Log for debugging
+      console.log('Checking status transition:', {
+        currentStatus: currentApplication.application_status,
+        newStatus,
+        userRole,
+        isAgent,
+        isValid: isValidStatusTransition(currentApplication.application_status, newStatus, isAgent)
+      });
+
+      if (!isValidStatusTransition(currentApplication.application_status, newStatus, isAgent)) {
+        throw new Error(`Invalid status transition from ${currentApplication.application_status} to ${newStatus}`);
+      }
+
+      return updateApplicationStatus(applicationId, newStatus);
+    },
+    onSuccess: (updatedApplication) => {
+      // Optimistically update the cache
+      queryClient.setQueryData(["applications"], (oldData: any) => {
+        return oldData.map((app: any) =>
+          app.id === updatedApplication.id ? updatedApplication : app
+        );
+      });
+
+      // Invalidate and refetch to ensure data consistency
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+
+      // Show success message
+      toast.success(`Application status updated to ${updatedApplication.application_status}`);
+    },
+    onError: (error: Error) => {
+      // Show error message
+      toast.error(`Failed to update application status: ${error.message}`);
+    },
+  });
+
   return {
     applications,
     isLoading,
@@ -60,5 +112,7 @@ export function useApplications() {
     refetch,
     createApplication: createApplicationMutation,
     isCreating,
+    updateStatus: updateStatusMutation,
+    isUpdatingStatus,
   };
 }

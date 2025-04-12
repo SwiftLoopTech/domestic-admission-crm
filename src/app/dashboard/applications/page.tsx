@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { format } from "date-fns";
 
 import { useApplications } from "@/hooks/useApplications";
+import { useSubagentNames } from "@/hooks/useSubagentNames";
+import { useUserRole } from "@/hooks/useUserRole";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -25,20 +26,21 @@ import {
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { ApplicationModal } from "@/components/application-modal";
-import { Badge } from "@/components/ui/badge";
-
-// Define application status colors
-const statusColors: Record<string, string> = {
-  "Pending": "bg-yellow-500",
-  "Approved": "bg-green-500",
-  "Rejected": "bg-red-500",
-  "In Progress": "bg-blue-500",
-  "Completed": "bg-purple-500",
-};
+import { ApplicationDetailsDialog } from "@/components/application-details-dialog";
+import { ApplicationStatusDropdown } from "@/components/application-status-dropdown";
 
 export default function ApplicationsPage() {
-  const { applications, isLoading, error } = useApplications();
+  const { applications, isLoading: isLoadingApplications, error: applicationsError } = useApplications();
+  const { getSubagentName, isLoading: isLoadingSubagents, error: subagentsError } = useSubagentNames();
+  const { userRole } = useUserRole();
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+
+  // Check if user is a subagent
+  const isSubagent = userRole === "sub-agent";
+
+  // Combined loading and error states
+  const isLoading = isLoadingApplications || isLoadingSubagents;
+  const error = applicationsError || subagentsError;
 
   // Filter applications by status if a status is selected
   const filteredApplications = selectedStatus
@@ -108,12 +110,11 @@ export default function ApplicationsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Student Name</TableHead>
-              <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>College</TableHead>
               <TableHead>Course</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Created</TableHead>
+              {!isSubagent && <TableHead>Subagent</TableHead>}
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -121,20 +122,20 @@ export default function ApplicationsPage() {
             {filteredApplications.map((application) => (
               <TableRow key={application.id}>
                 <TableCell className="font-medium">{application.student_name}</TableCell>
-                <TableCell>{application.email}</TableCell>
                 <TableCell>{application.phone}</TableCell>
                 <TableCell>{application.preferred_college}</TableCell>
                 <TableCell>{application.preferred_course}</TableCell>
-                <TableCell>
-                  <Badge className={statusColors[application.application_status] || "bg-gray-500"}>
-                    {application.application_status}
-                  </Badge>
+                <TableCell className="min-w-[200px] text-black">
+                  <ApplicationStatusDropdown
+                    applicationId={application.id}
+                    currentStatus={application.application_status}
+                  />
                 </TableCell>
-                <TableCell>
-                  {application.created_at
-                    ? format(new Date(application.created_at), "MMM d, yyyy")
-                    : "N/A"}
-                </TableCell>
+                {!isSubagent && (
+                  <TableCell>
+                    {getSubagentName(application.subagent_id)}
+                  </TableCell>
+                )}
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -145,8 +146,14 @@ export default function ApplicationsPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>View details</DropdownMenuItem>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
+                      <ApplicationDetailsDialog
+                        application={application}
+                        trigger={
+                          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                            View details
+                          </DropdownMenuItem>
+                        }
+                      />
                       <DropdownMenuSeparator />
                       <DropdownMenuItem className="text-red-600">
                         Delete

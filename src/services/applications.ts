@@ -91,6 +91,79 @@ export async function createApplication(data: ApplicationInput) {
   }
 }
 
+/**
+ * Updates the status of an application
+ * @param applicationId The ID of the application to update
+ * @param newStatus The new status to set
+ * @returns The updated application
+ */
+export async function updateApplicationStatus(applicationId: string, newStatus: string) {
+  try {
+    // Get current user's ID
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      throw new Error("No authenticated user found");
+    }
+
+    // Get user role to log for debugging
+    const { data: agentData, error: agentError } = await supabase
+      .from('agents')
+      .select('super_agent')
+      .eq('user_id', session.user.id)
+      .single();
+
+    if (agentError) {
+      console.error('Error fetching agent data:', agentError);
+    } else {
+      console.log('Agent data:', agentData);
+      console.log('User is:', agentData.super_agent === null ? 'agent' : 'subagent');
+    }
+
+    // Get the application to check permissions
+    const { data: applicationData, error: applicationError } = await supabase
+      .from('applications')
+      .select('*')
+      .eq('id', applicationId)
+      .single();
+
+    if (applicationError) {
+      console.error('Error fetching application:', applicationError);
+      throw new Error(`Failed to fetch application: ${applicationError.message}`);
+    }
+
+    console.log('Application data:', applicationData);
+    console.log('Updating application status:', { applicationId, newStatus, userId: session.user.id });
+
+    // Update the application status
+    const { data, error } = await supabase
+      .from('applications')
+      .update({
+        application_status: newStatus,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', applicationId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating application status:', error);
+      throw new Error(`Failed to update application status: ${error.message}`);
+    }
+
+    console.log('Update successful, returned data:', data);
+
+    return data;
+  } catch (error) {
+    console.error('UpdateApplicationStatus error:', error);
+    throw error;
+  }
+}
+
+/**
+ * Gets all applications for the current authenticated user
+ * @returns An array of application records
+ */
 export async function getApplications() {
   // Get current user's ID
   const { data: { session } } = await supabase.auth.getSession();

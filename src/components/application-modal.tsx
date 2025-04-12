@@ -17,6 +17,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useSubagents } from "@/hooks/useSubagents";
 import { useApplications } from "@/hooks/useApplications";
 import { getCurrentUserId } from "@/utils/agents.supabase";
+import { APPLICATION_STATUS } from "@/utils/application-status";
 
 // Define form schema with Zod
 const applicationSchema = z.object({
@@ -77,7 +78,7 @@ export function ApplicationModal() {
         // For agents, use the selected subagent_id or null
         subagent_id: userRole === "sub-agent" ? currentUserId :
                     (data.subagent_id === "self" ? null : data.subagent_id),
-        application_status: "processing",
+        application_status: APPLICATION_STATUS.PENDING,
       };
 
       // Use the mutation to create the application
