@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
 import { PlusCircle } from "lucide-react";
+import { Database } from "@/types/supabase";
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogFooter, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useUserRole } from "@/hooks/useUserRole";
 import { createApplication } from "@/services/applications";
+
+type College = Database['public']['Tables']['colleges']['Row'];
 
 // Define form schema with Zod
 const applicationSchema = z.object({

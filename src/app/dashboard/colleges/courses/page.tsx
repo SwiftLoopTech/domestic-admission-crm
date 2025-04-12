@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState } from "react";
+import { Database } from "@/types/supabase";
 import { 
   Card, 
   CardContent, 
@@ -31,27 +32,11 @@ import {
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 
-export interface Course {
-  id: string;
-  slno: string;
-  course: string;
-  college: string;
-  place: string;
-  totalFee: string;
-  firstYearFee: string;
-  secondYearFee: string;
-  thirdYearFee: string;
-  fourthYearFee: string;
-  hostelFood: string;
-}
+type College = Database['public']['Tables']['colleges']['Row'];
+type Course = Database['public']['Tables']['courses']['Row'];
 
 export default function CoursesPage() {
-  // Dummy data for colleges (would come from API in real app)
-  const colleges = [
-    { id: "1", name: "Harvard University" },
-    { id: "2", name: "Stanford University" },
-    { id: "3", name: "Massachusetts Institute of Technology" }
-  ]
+  const [colleges, setColleges] = useState<College[]>([]);
   
   // Dummy data for courses
   const [courses, setCourses] = useState<Course[]>([

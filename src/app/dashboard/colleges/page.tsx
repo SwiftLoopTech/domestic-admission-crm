@@ -1,6 +1,9 @@
+
 "use client"
 
-import { useState } from "react"
+import { useState } from "react";
+import { useColleges, useDeleteCollege } from "@/hooks/useColleges";
+import { Database } from "@/types/supabase";
 import {
   Card,
   CardContent,
@@ -22,51 +25,26 @@ import {
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
+import { CollegeCard } from "@/components/colleges/college-card"
 
-// Define college type
-interface College {
-  id: string
-  name: string
-  location: string
-  website: string
-  brochureUrl?: string
-}
+type College = Database['public']['Tables']['colleges']['Row'];
 
 export default function CollegesPage() {
-  const [colleges, setColleges] = useState<College[]>([
-    {
-      id: "1",
-      name: "Massachusetts Institute of Technology",
-      location: "Cambridge, MA",
-      website: "https://mit.edu",
-      brochureUrl: "#"
-    },
-    // Add more colleges as needed
-  ])
+  const [searchTerm, setSearchTerm] = useState("");
+  const { data, isLoading } = useColleges({ searchTerm });
+  const deleteCollegeMutation = useDeleteCollege();
 
-  const [searchTerm, setSearchTerm] = useState("")
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+  };
 
-  const filteredColleges = colleges.filter(college =>
-    college.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    college.location.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-
-  const handleAddCollege = (collegeData: {
-    name: string
-    location: string
-    website: string
-    brochureFile: File | null
-  }) => {
-    const newCollege: College = {
-      id: Date.now().toString(),
-      name: collegeData.name,
-      location: collegeData.location,
-      website: collegeData.website,
-      brochureUrl: collegeData.brochureFile ? "#" : undefined
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteCollegeMutation.mutateAsync(id);
+    } catch (error) {
+      console.error('Error deleting college:', error);
     }
-
-    setColleges([...colleges, newCollege])
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -81,7 +59,7 @@ export default function CollegesPage() {
             <p className="text-teal-50">Manage and explore partner institutions</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
-            <AddCollegeModal onAddCollege={handleAddCollege} />
+            <AddCollegeModal />
             <Link href="/dashboard/colleges/courses">
               <Button 
                 variant="outline" 
@@ -101,65 +79,25 @@ export default function CollegesPage() {
         <Input
           placeholder="Search colleges by name or location..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => handleSearch(e.target.value)}
           className="pl-9"
         />
       </div>
 
       {/* Colleges Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredColleges.map((college) => (
-          <Card key={college.id} className="group hover:shadow-lg transition-shadow duration-200 border">
-            <CardHeader className="space-y-3 pb-4">
-              <div className="flex items-start justify-between">
-                <Badge variant="secondary" className="bg-teal-100 text-teal-700 hover:bg-teal-200">
-                  Partner Institution
-                </Badge>
-              </div>
-              <CardTitle className="flex items-center text-xl">
-                <BuildingIcon className="h-6 w-6 mr-2 text-teal-600" />
-                {college.name}
-              </CardTitle>
-              <CardDescription className="flex items-center text-base">
-                <MapPinIcon className="h-5 w-5 mr-2 text-gray-500" />
-                {college.location}
-              </CardDescription>
-            </CardHeader>
-            
-            <CardContent className="space-y-4">
-              <a
-                href={college.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center text-blue-600 hover:text-blue-700 hover:underline"
-              >
-                <ExternalLinkIcon className="h-4 w-4 mr-2" />
-                Visit Website
-              </a>
-            </CardContent>
-
-            <CardFooter className="pt-4 flex gap-2">
-              {college.brochureUrl && (
-                <Button 
-                  variant="outline" 
-                  className="flex-1 border-teal-200 text-teal-700 hover:bg-teal-50"
-                >
-                  <FileIcon className="h-4 w-4 mr-2" />
-                  Download Brochure
-                </Button>
-              )}
-              <Link href="/dashboard/colleges/courses" className="flex-1">
-                <Button 
-                  className="w-full bg-teal-500 hover:bg-teal-600 text-white"
-                >
-                  <BookOpenIcon className="h-4 w-4 mr-2" />
-                  View Courses
-                </Button>
-              </Link>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
+      {isLoading ? (
+        <div>@noel: add a skeleton here</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {data?.colleges.map((college) => (
+            <CollegeCard
+              key={college.id}
+              college={college}
+              onDelete={() => handleDelete(college.id)}
+            />
+          ))}
+        </div>
+      )}
     </div>
-  )
+  );
 }
