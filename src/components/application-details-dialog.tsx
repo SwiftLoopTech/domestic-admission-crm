@@ -15,6 +15,7 @@ import { ApplicationStatusDropdown } from "@/components/application-status-dropd
 import { STATUS_DESCRIPTIONS } from "@/utils/application-status";
 import { DocumentList } from "@/components/document-list";
 import { DocumentUpload } from "@/components/document-upload";
+import { NotesEditor } from "@/components/notes-editor";
 import { useUserRole } from "@/hooks/useUserRole";
 
 interface Application {
@@ -131,17 +132,12 @@ export function ApplicationDetailsDialog({
             </CardContent>
           </Card>
 
-          {/* Notes */}
-          {application.notes && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle>Notes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{application.notes}</p>
-              </CardContent>
-            </Card>
-          )}
+          {/* Notes - always show the notes section with ability to edit */}
+          <NotesEditor
+            applicationId={application.id}
+            initialNotes={application.notes}
+            onNotesUpdated={() => setOpen(true)}
+          />
 
           {/* Documents section - always show document list */}
           <Card>
