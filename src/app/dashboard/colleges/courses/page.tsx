@@ -1,17 +1,16 @@
 "use client"
 
-import { useState } from "react";
-import { Database } from "@/types/supabase";
+import { useState } from "react"
+import { Database } from "@/types/supabase"
 import { 
   Card, 
-  CardContent, 
   CardHeader, 
   CardTitle,
   CardDescription,
   CardFooter
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { AddCourseModal, Course } from "@/components/colleges/add-course-modal"
+import { AddCourseModal } from "@/components/colleges/add-course-modal"
 import { BulkUploadCoursesModal } from "@/components/colleges/bulk-upload-courses-modal"
 import {
   Dialog,
@@ -26,91 +25,54 @@ import {
   DollarSignIcon,
   SearchIcon,
   GraduationCapIcon,
-  CalendarIcon,
-  BedDoubleIcon
+  BedDoubleIcon,
+  Loader2Icon
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { useCourses } from "@/hooks/useCourses"
+import { useColleges } from "@/hooks/useColleges"
 
-type College = Database['public']['Tables']['colleges']['Row'];
-type Course = Database['public']['Tables']['courses']['Row'];
+type Course = Database['public']['Tables']['courses']['Row']
+type College = Database['public']['Tables']['colleges']['Row']
 
 export default function CoursesPage() {
-  const [colleges, setColleges] = useState<College[]>([]);
-  
-  // Dummy data for courses
-  const [courses, setCourses] = useState<Course[]>([
-    {
-      id: "1",
-      slno: "1",
-      course: "Computer Science",
-      college: "Harvard University",
-      place: "Cambridge, MA",
-      totalFee: "400000",
-      firstYearFee: "100000",
-      secondYearFee: "100000",
-      thirdYearFee: "100000",
-      fourthYearFee: "100000",
-      hostelFood: "80000"
-    },
-    {
-      id: "2",
-      slno: "2",
-      course: "Business Administration",
-      college: "Stanford University",
-      place: "Stanford, CA",
-      totalFee: "350000",
-      firstYearFee: "90000",
-      secondYearFee: "90000",
-      thirdYearFee: "85000",
-      fourthYearFee: "85000",
-      hostelFood: "75000"
-    },
-    {
-      id: "3",
-      slno: "3",
-      course: "Mechanical Engineering",
-      college: "Massachusetts Institute of Technology",
-      place: "Cambridge, MA",
-      totalFee: "420000",
-      firstYearFee: "105000",
-      secondYearFee: "105000",
-      thirdYearFee: "105000",
-      fourthYearFee: "105000",
-      hostelFood: "85000"
-    }
-  ])
-  
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
   
-  const handleAddCourse = (courseData: Omit<Course, "id">) => {
-    const newCourse: Course = {
-      id: Date.now().toString(),
-      ...courseData
-    }
-    
-    setCourses([...courses, newCourse])
+  // Get both courses and colleges data
+  const { 
+    data: coursesData, 
+    isLoading: isLoadingCourses, 
+    isError: isErrorCourses 
+  } = useCourses({
+    searchTerm: searchTerm,
+    limit: 50
+  })
+
+  const {
+    data: collegesData,
+    isLoading: isLoadingColleges,
+    isError: isErrorColleges
+  } = useColleges()
+
+  const isLoading = isLoadingCourses || isLoadingColleges
+  const isError = isErrorCourses || isErrorColleges
+
+  const getCollegeDetails = (collegeId: string) => {
+    return collegesData?.colleges.find(college => college.id === collegeId)
   }
-  
-  const handleBulkUpload = (coursesData: Omit<Course, "id">[]) => {
-    const newCourses = coursesData.map(course => ({
-      id: Date.now() + Math.random().toString(36).substring(2, 9),
-      ...course
-    }))
-    
-    setCourses([...courses, ...newCourses])
-  }
-  
-  // Filter courses based on search term
-  const filteredCourses = courses.filter(course => 
-    course.course.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.college.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.place.toLowerCase().includes(searchTerm.toLowerCase())
-  )
 
   const formatCurrency = (amount: string) => {
     return `₹${parseInt(amount).toLocaleString('en-IN')}`
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-600">Failed to load courses. Please try again later.</p>
+      </div>
+    )
   }
 
   return (
@@ -126,8 +88,8 @@ export default function CoursesPage() {
             <p className="text-teal-50">Manage and explore course offerings across universities</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
-            <AddCourseModal onAddCourse={handleAddCourse} colleges={colleges} />
-            <BulkUploadCoursesModal onBulkUpload={handleBulkUpload} />
+            <AddCourseModal />
+            <BulkUploadCoursesModal />
           </div>
         </div>
       </div>
@@ -143,47 +105,58 @@ export default function CoursesPage() {
         />
       </div>
 
-      {/* Courses Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCourses.map((course) => (
-          <Card key={course.id} className="group hover:shadow-lg transition-shadow duration-200 border">
-            <CardHeader className="space-y-3 pb-4">
-              <div className="flex items-start justify-between">
-                <Badge variant="secondary" className="bg-teal-100 text-teal-700 hover:bg-teal-200">
-                  #{course.slno}
-                </Badge>
-                <Badge variant="outline" className="border-blue-200 text-blue-700">
-                  4 Years
-                </Badge>
-              </div>
-              <CardTitle className="flex items-center text-xl">
-                <BookOpenIcon className="h-6 w-6 mr-2 text-teal-600" />
-                {course.course}
-              </CardTitle>
-              <div className="space-y-2">
-                <CardDescription className="flex items-center text-base">
-                  <BuildingIcon className="h-5 w-5 mr-2 text-gray-500" />
-                  {course.college}
-                </CardDescription>
-                <CardDescription className="flex items-center text-base">
-                  <MapPinIcon className="h-5 w-5 mr-2 text-gray-500" />
-                  {course.place}
-                </CardDescription>
-              </div>
-            </CardHeader>
-            
-            <CardFooter className="pt-4">
-              <Button 
-                onClick={() => setSelectedCourse(course)}
-                className="w-full bg-teal-500 hover:bg-teal-600 text-white"
-              >
-                <DollarSignIcon className="h-4 w-4 mr-2" />
-                View Complete Details
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
+      {/* Loading State */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2Icon className="h-8 w-8 animate-spin text-teal-600" />
+          <span className="ml-3 text-lg text-gray-600">Loading courses...</span>
+        </div>
+      ) : (
+        /* Courses Grid */
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {coursesData?.courses.map((course) => {
+            const college = getCollegeDetails(course.college_id)
+            return (
+              <Card key={course.id} className="group hover:shadow-lg transition-shadow duration-200 border">
+                <CardHeader className="space-y-3 pb-4">
+                  <div className="flex items-start justify-between">
+                    <Badge variant="secondary" className="bg-teal-100 text-teal-700 hover:bg-teal-200">
+                      #{course.slno}
+                    </Badge>
+                    <Badge variant="outline" className="border-blue-200 text-blue-700">
+                      {course.duration_years} Years
+                    </Badge>
+                  </div>
+                  <CardTitle className="flex items-center text-xl">
+                    <BookOpenIcon className="h-6 w-6 mr-2 text-teal-600" />
+                    {course.course_name}
+                  </CardTitle>
+                  <div className="space-y-2">
+                    <CardDescription className="flex items-center text-base">
+                      <BuildingIcon className="h-5 w-5 mr-2 text-gray-500" />
+                      {college?.name || 'College not found'}
+                    </CardDescription>
+                    <CardDescription className="flex items-center text-base">
+                      <MapPinIcon className="h-5 w-5 mr-2 text-gray-500" />
+                      {college?.location || 'Location not available'}
+                    </CardDescription>
+                  </div>
+                </CardHeader>
+                
+                <CardFooter className="pt-4">
+                  <Button 
+                    onClick={() => setSelectedCourse(course)}
+                    className="w-full bg-teal-500 hover:bg-teal-600 text-white"
+                  >
+                    <DollarSignIcon className="h-4 w-4 mr-2" />
+                    View Complete Details
+                  </Button>
+                </CardFooter>
+              </Card>
+            )
+          })}
+        </div>
+      )}
 
       {/* Course Details Modal */}
       <Dialog open={!!selectedCourse} onOpenChange={() => setSelectedCourse(null)}>
@@ -193,18 +166,23 @@ export default function CoursesPage() {
               <DialogHeader>
                 <DialogTitle className="text-2xl flex items-center gap-2 text-teal-700">
                   <BookOpenIcon className="h-6 w-6" />
-                  {selectedCourse.course}
+                  {selectedCourse.course_name}
                 </DialogTitle>
-                <div className="flex flex-col gap-2 mt-2">
-                  <p className="flex items-center text-gray-600">
-                    <BuildingIcon className="h-5 w-5 mr-2" />
-                    {selectedCourse.college}
-                  </p>
-                  <p className="flex items-center text-gray-600">
-                    <MapPinIcon className="h-5 w-5 mr-2" />
-                    {selectedCourse.place}
-                  </p>
-                </div>
+                {(() => {
+                  const college = getCollegeDetails(selectedCourse.college_id||"")
+                  return (
+                    <div className="flex flex-col gap-2 mt-2">
+                      <p className="flex items-center text-gray-600">
+                        <BuildingIcon className="h-5 w-5 mr-2" />
+                        {college?.name || 'College not found'}
+                      </p>
+                      <p className="flex items-center text-gray-600">
+                        <MapPinIcon className="h-5 w-5 mr-2" />
+                        {college?.location || 'Location not available'}
+                      </p>
+                    </div>
+                  )
+                })()}
               </DialogHeader>
 
               <div className="space-y-6">
@@ -213,7 +191,7 @@ export default function CoursesPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-teal-700 font-medium">Total Course Fee</span>
                     <span className="text-2xl font-bold text-teal-700">
-                      {formatCurrency(selectedCourse.totalFee)}
+                      {formatCurrency(((selectedCourse.fees as { total: number })?.total || 0).toString())}
                     </span>
                   </div>
                 </div>
@@ -224,19 +202,27 @@ export default function CoursesPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-gray-50 p-3 rounded-lg">
                       <p className="text-gray-600">First Year</p>
-                      <p className="text-lg font-semibold">{formatCurrency(selectedCourse.firstYearFee)}</p>
+                      <p className="text-lg font-semibold">
+                        {formatCurrency(((selectedCourse.fees as { firstYear: number })?.firstYear || 0).toString())}
+                      </p>
                     </div>
                     <div className="bg-gray-50 p-3 rounded-lg">
                       <p className="text-gray-600">Second Year</p>
-                      <p className="text-lg font-semibold">{formatCurrency(selectedCourse.secondYearFee)}</p>
+                      <p className="text-lg font-semibold">
+                        {formatCurrency(((selectedCourse.fees as { secondYear: number })?.secondYear || 0).toString())}
+                      </p>
                     </div>
                     <div className="bg-gray-50 p-3 rounded-lg">
                       <p className="text-gray-600">Third Year</p>
-                      <p className="text-lg font-semibold">{formatCurrency(selectedCourse.thirdYearFee)}</p>
+                      <p className="text-lg font-semibold">
+                        {formatCurrency(((selectedCourse.fees as { thirdYear: number })?.thirdYear || 0).toString())}
+                      </p>
                     </div>
                     <div className="bg-gray-50 p-3 rounded-lg">
                       <p className="text-gray-600">Fourth Year</p>
-                      <p className="text-lg font-semibold">{formatCurrency(selectedCourse.fourthYearFee)}</p>
+                      <p className="text-lg font-semibold">
+                        {formatCurrency(((selectedCourse.fees as { fourthYear: number })?.fourthYear || 0).toString())}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -249,7 +235,7 @@ export default function CoursesPage() {
                       <span className="text-orange-700 font-medium">Hostel & Food (per year)</span>
                     </div>
                     <span className="text-xl font-bold text-orange-700">
-                      {formatCurrency(selectedCourse.hostelFood)}
+                      {formatCurrency((selectedCourse.hostel_food_fee || 0).toString())}
                     </span>
                   </div>
                 </div>
@@ -260,7 +246,7 @@ export default function CoursesPage() {
       </Dialog>
 
       {/* Empty State */}
-      {filteredCourses.length === 0 && (
+      {!isLoading && coursesData?.courses.length === 0 && (
         <div className="text-center py-12 bg-gray-50 rounded-xl">
           {searchTerm ? (
             <div className="space-y-2">

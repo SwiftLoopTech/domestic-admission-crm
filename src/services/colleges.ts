@@ -211,6 +211,44 @@ export const collegeService = {
     }
 
     return data;
+  },
+
+  /**
+   * Check if a college exists with given name and place
+   */
+  async checkCollegeExists(name: string, place: string): Promise<boolean> {
+    const { data, error } = await supabase
+      .from('colleges')
+      .select('id')
+      .eq('name', name)
+      .eq('location', place)
+      .single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 is "not found" error
+      console.error('Error checking college:', error);
+      throw error;
+    }
+
+    return !!data;
+  },
+
+  /**
+   * Get a college by name and place
+   */
+  async getCollegeByNameAndPlace(name: string, place: string): Promise<College | null> {
+    const { data, error } = await supabase
+      .from('colleges')
+      .select()
+      .eq('name', name)
+      .eq('location', place)
+      .single();
+
+    if (error) {
+      console.error('Error fetching college:', error);
+      throw error;
+    }
+
+    return data;
   }
 };
 

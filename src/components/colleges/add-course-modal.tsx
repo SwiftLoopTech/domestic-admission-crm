@@ -4,112 +4,64 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription,
-  DialogFooter,
-  DialogTrigger
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { 
-  PlusIcon, 
-  GraduationCap, 
-  Building2, 
-  MapPin, 
-  IndianRupee,
-  Home,
-  CalendarRange 
-} from "lucide-react"
-
-// Dummy colleges data
-const COLLEGES = [
-  { id: "1", name: "MIT", location: "Cambridge, MA" },
-  { id: "2", name: "Stanford University", location: "Stanford, CA" },
-  { id: "3", name: "Harvard University", location: "Cambridge, MA" },
-]
-
-export interface Course {
-  id: string;
-  slno: string;
-  course: string;
-  college: string;
-  place: string;
-  totalFee: string;
-  firstYearFee: string;
-  secondYearFee: string;
-  thirdYearFee: string;
-  fourthYearFee: string;
-  hostelFood: string;
-}
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useAddCourse } from "@/hooks/useCourses"
+import { useColleges } from "@/hooks/useColleges"
+import { DialogTrigger } from "@radix-ui/react-dialog"
+import { PlusIcon, BookOpenIcon, BuildingIcon, Loader2Icon } from "lucide-react"
 
 const courseSchema = z.object({
   slno: z.string().min(1, "Serial number is required"),
-  course: z.string().min(2, "Course name must be at least 2 characters"),
-  collegeId: z.string().min(1, "Please select a college"),
-  place: z.string().min(2, "Place is required"),
-  totalFee: z.string().min(1, "Total fee is required"),
-  firstYearFee: z.string(),
-  secondYearFee: z.string(),
-  thirdYearFee: z.string(),
-  fourthYearFee: z.string(),
-  hostelFood: z.string(),
+  course_name: z.string().min(2, "Course name must be at least 2 characters"),
+  college_id: z.string().min(1, "Please select a college"),
+  duration_years: z.number().min(1, "Duration is required"),
+  fees: z.object({
+    total: z.number().min(0, "Total fee is required"),
+    firstYear: z.number().min(0, "First year fee is required"),
+    secondYear: z.number().min(0, "Second year fee is required"),
+    thirdYear: z.number().min(0, "Third year fee is required"),
+    fourthYear: z.number().min(0, "Fourth year fee is required"),
+  }),
+  hostel_food_fee: z.number().min(0, "Hostel and food fee is required"),
 })
 
 type CourseFormValues = z.infer<typeof courseSchema>
 
-interface AddCourseModalProps {
-  onAddCourse: (course: Omit<Course, "id">) => void
-}
-
-export function AddCourseModal({ onAddCourse }: AddCourseModalProps) {
+export function AddCourseModal() {
   const [open, setOpen] = useState(false)
+  const { data: collegesData } = useColleges()
+  const addCourseMutation = useAddCourse()
 
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
       slno: "",
-      course: "",
-      collegeId: "",
-      place: "",
-      totalFee: "",
-      firstYearFee: "",
-      secondYearFee: "",
-      thirdYearFee: "",
-      fourthYearFee: "",
-      hostelFood: ""
+      course_name: "",
+      college_id: "",
+      duration_years: 4,
+      fees: {
+        total: 0,
+        firstYear: 0,
+        secondYear: 0,
+        thirdYear: 0,
+        fourthYear: 0,
+      },
+      hostel_food_fee: 0,
     }
   })
 
-  const onSubmit = (data: CourseFormValues) => {
-    console.log("Form submitted with:", data)
-    const selectedCollege = COLLEGES.find(c => c.id === data.collegeId)
-    
-    onAddCourse({
-      ...data,
-      college: selectedCollege?.name || "",
-    })
-    
-    form.reset()
-    setOpen(false)
+  const onSubmit = async (data: CourseFormValues) => {
+    try {
+      await addCourseMutation.mutateAsync(data);
+      form.reset();
+      setOpen(false);
+    } catch (error) {
+      console.error('Error adding course:', error);
+    }
   }
 
   return (
@@ -123,7 +75,7 @@ export function AddCourseModal({ onAddCourse }: AddCourseModalProps) {
       <DialogContent className="sm:max-w-[600px] p-0 bg-white border-none">
         <DialogHeader className="bg-gradient-to-r from-teal-500 to-cyan-600 p-6 rounded-t-lg">
           <DialogTitle className="text-white flex items-center gap-2">
-            <GraduationCap className="h-5 w-5" />
+            <BookOpenIcon className="h-5 w-5" />
             Add New Course
           </DialogTitle>
           <DialogDescription className="text-teal-50">
@@ -132,158 +84,185 @@ export function AddCourseModal({ onAddCourse }: AddCourseModalProps) {
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Basic Information */}
-              <div className="space-y-4">
-                <div className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-xl p-4 border border-teal-100">
-                  <h3 className="text-sm font-medium text-teal-800 mb-3 flex items-center gap-2">
-                    <GraduationCap className="h-4 w-4" />
-                    Course Details
-                  </h3>
-                  
-                  <FormField
-                    control={form.control}
-                    name="slno"
-                    render={({ field }) => (
-                      <FormItem className="mb-2">
-                        <FormLabel>Serial Number</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Enter serial number" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 space-y-6">
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="slno"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Serial Number</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Enter serial number" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                  <FormField
-                    control={form.control}
-                    name="course"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Course Name</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="e.g. Computer Science" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+              <FormField
+                control={form.control}
+                name="college_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>College</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a college" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {collegesData?.colleges?.map((college) => (
+                          <SelectItem key={college.id} value={college.id}>
+                            {college.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-4 border border-blue-100">
-                  <h3 className="text-sm font-medium text-blue-800 mb-3 flex items-center gap-2">
-                    <Building2 className="h-4 w-4" />
-                    Institution Details
-                  </h3>
-
-                  <FormField
-                    control={form.control}
-                    name="collegeId"
-                    render={({ field }) => (
-                      <FormItem className="mb-2">
-                        <FormLabel>College</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a college" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {COLLEGES.map((college) => (
-                              <SelectItem key={college.id} value={college.id}>
-                                {college.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="place"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Place</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="City, State" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              {/* Fee Structure */}
-              <div className="space-y-4">
-                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-100">
-                  <h3 className="text-sm font-medium text-emerald-800 mb-3 flex items-center gap-2">
-                    <IndianRupee className="h-4 w-4" />
-                    Fee Structure
-                  </h3>
-
-                  <FormField
-                    control={form.control}
-                    name="totalFee"
-                    render={({ field }) => (
-                      <FormItem className="mb-2">
-                        <FormLabel>Total Fee</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="e.g. 400000" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-2 gap-2">
-                    {["firstYearFee", "secondYearFee", "thirdYearFee", "fourthYearFee"].map((year, index) => (
-                      <FormField
-                        key={year}
-                        control={form.control}
-                        name={year as keyof CourseFormValues}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Year {index + 1}</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="e.g. 100000" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-4 border border-orange-100">
-                  <h3 className="text-sm font-medium text-orange-800 mb-3 flex items-center gap-2">
-                    <Home className="h-4 w-4" />
-                    Accommodation
-                  </h3>
-
-                  <FormField
-                    control={form.control}
-                    name="hostelFood"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Hostel & Food Fee (per year)</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="e.g. 50000" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
+              <FormField
+                control={form.control}
+                name="course_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Course Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Enter course name" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            <DialogFooter className="pt-4 ">
+            {/* Fee Structure */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Fee Structure</h3>
+              
+              <FormField
+                control={form.control}
+                name="fees.total"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Total Fee</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        {...field} 
+                        onChange={e => field.onChange(Number(e.target.value))}
+                        placeholder="Enter total fee" 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="fees.firstYear"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>First Year Fee</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          {...field} 
+                          onChange={e => field.onChange(Number(e.target.value))}
+                          placeholder="Enter first year fee" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="fees.secondYear"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Second Year Fee</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          {...field} 
+                          onChange={e => field.onChange(Number(e.target.value))}
+                          placeholder="Enter second year fee" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="fees.thirdYear"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Third Year Fee</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          {...field} 
+                          onChange={e => field.onChange(Number(e.target.value))}
+                          placeholder="Enter third year fee" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="fees.fourthYear"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Fourth Year Fee</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          {...field} 
+                          onChange={e => field.onChange(Number(e.target.value))}
+                          placeholder="Enter fourth year fee" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="hostel_food_fee"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Hostel & Food Fee (per year)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        {...field} 
+                        onChange={e => field.onChange(Number(e.target.value))}
+                        placeholder="Enter hostel and food fee" 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="flex justify-end gap-4 pt-4">
               <Button 
                 type="button" 
                 variant="outline" 
@@ -294,11 +273,22 @@ export function AddCourseModal({ onAddCourse }: AddCourseModalProps) {
               </Button>
               <Button 
                 type="submit"
+                disabled={addCourseMutation.isPending}
                 className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white hover:from-teal-600 hover:to-cyan-700"
               >
-                Add Course
+                {addCourseMutation.isPending ? (
+                  <>
+                    <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                    Adding Course...
+                  </>
+                ) : (
+                  <>
+                    <PlusIcon className="mr-2 h-4 w-4" />
+                    Add Course
+                  </>
+                )}
               </Button>
-            </DialogFooter>
+            </div>
           </form>
         </Form>
       </DialogContent>

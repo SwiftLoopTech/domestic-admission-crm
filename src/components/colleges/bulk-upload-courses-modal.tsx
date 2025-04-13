@@ -18,50 +18,97 @@ import {
   FileText, 
   CheckCircle2, 
   AlertCircle,
-  ArrowRight
+  ArrowRight,
+  Building2
 } from "lucide-react"
-import { Course } from "./add-course-modal"
-import { Separator } from "@/components/ui/separator"
+import { Database } from "@/types/supabase"
+import { collegeService } from "@/services/colleges"
+import { useBulkAddCourses } from "@/hooks/useCourses"
+import { toast } from "sonner"
+import { useAddCollege } from "@/hooks/useColleges"
 
-interface BulkUploadCoursesModalProps {
-  onBulkUpload: (courses: Omit<Course, "id">[]) => void
+type Course = Database['public']['Tables']['courses']['Row']
+type CreateCourseInput = Database['public']['Tables']['courses']['Insert']
+
+interface ValidationResult {
+  existingColleges: { name: string; place: string }[];
+  newColleges: { name: string; place: string }[];
+  validRows: any[];
+  invalidRows: any[];
 }
 
-export function BulkUploadCoursesModal({ onBulkUpload }: BulkUploadCoursesModalProps) {
+export function BulkUploadCoursesModal() {
   const [open, setOpen] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [parsedData, setParsedData] = useState<any[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [validation, setValidation] = useState<ValidationResult | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
+
+  const bulkAddMutation = useBulkAddCourses()
+  const addCollegeMutation = useAddCollege()
 
   const validateCsvRow = (row: any): boolean => {
-    // Check if the row has any non-empty value
     return Object.values(row).some(value => value && value.toString().trim() !== '')
   }
 
-  const handleCsvParse = (data: any[]) => {
+  const validateAndProcessData = async (data: any[]) => {
     try {
-      // Filter out empty rows and validate data
+      setIsProcessing(true)
+      
       const validRows = data.filter(row => validateCsvRow(row))
       
-      // Validate required fields
-      const invalidRows = validRows.filter(row => !row.COURSE || !row.COLLEGE)
+     
+      const invalidRows = validRows.filter(row => !row.COURSE || !row.COLLEGE || !row.PLACE)
       
       if (invalidRows.length > 0) {
-        setError(`${invalidRows.length} rows are missing required fields (COURSE or COLLEGE)`)
+        setError(`${invalidRows.length} rows are missing required fields (COURSE, COLLEGE, or PLACE)`)
         setParsedData([])
         return
       }
 
+      // Get unique college-place combinations from CSV
+      const collegesFromCsv = Array.from(new Set(
+        validRows.map(row => JSON.stringify({ name: row.COLLEGE.trim(), place: row.PLACE.trim() }))
+      )).map(str => JSON.parse(str));
+
+      // Check which colleges exist in DB
+      const existingColleges: { name: string; place: string }[] = []
+      const newColleges: { name: string; place: string }[] = []
+
+      for (const college of collegesFromCsv) {
+        const exists = await collegeService.checkCollegeExists(college.name, college.place)
+        if (exists) {
+          existingColleges.push(college)
+        } else {
+          newColleges.push(college)
+        }
+      }
+
+      setValidation({
+        existingColleges,
+        newColleges,
+        validRows,
+        invalidRows
+      })
+
       setParsedData(validRows)
       setError(null)
     } catch (err) {
-      setError("Failed to parse CSV data. Please check the format.")
-      setParsedData([])
+      setError("Failed to validate colleges. Please try again.")
+      toast.error("Failed to validate colleges")
+    } finally {
+      setIsProcessing(false)
     }
+  }
+
+  const handleCsvParse = (data: any[]) => {
+    validateAndProcessData(data)
   }
 
   const handleFileChange = (file: File | null) => {
     setFile(file)
+    setValidation(null)
     if (!file) {
       setParsedData([])
       setError(null)
@@ -86,36 +133,80 @@ export function BulkUploadCoursesModal({ onBulkUpload }: BulkUploadCoursesModalP
     document.body.removeChild(link);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    console.log(parsedData)
     if (parsedData.length === 0) {
       setError("No valid data found in the CSV file")
+      toast.error("No valid data found in the CSV file")
       return
     }
 
     try {
-      // Map CSV data to course objects
-      const courses = parsedData.map(row => ({
-        slno: row.SLNO?.toString() || "",
-        course: row.COURSE?.toString() || "",
-        college: row.COLLEGE?.toString() || "",
-        place: row.PLACE?.toString() || "",
-        totalFee: row["TOTAL FEE"]?.toString() || "",
-        firstYearFee: row["1ST YR"]?.toString() || "",
-        secondYearFee: row["2ND YR"]?.toString() || "",
-        thirdYearFee: row["3RD YR"]?.toString() || "",
-        fourthYearFee: row["4TH YR"]?.toString() || "",
-        hostelFood: row["HOSTEL/FOOD"]?.toString() || ""
-      }))
+      setIsProcessing(true)
 
-      onBulkUpload(courses)
+      // First create any new colleges
+      if (validation?.newColleges.length) {
+        for (const college of validation.newColleges) { 
+          addCollegeMutation.mutateAsync({
+            brochureFile:null,
+            collegeData:{
+              name: college.name,
+              location: college.place,
+              website_url: null,
+              contact_number: null,
+              agent_id: null,
+              brochure_url: null,
+            }
+          })
+          
+        }
+      }
       
-      // Reset and close modal
+
+      // Map CSV data to course objects
+      const courses: CreateCourseInput[] = await Promise.all(
+        parsedData.map(async (row) => {
+          // Get college_id based on name and place
+          const college = await collegeService.getCollegeByNameAndPlace(
+            row.COLLEGE.trim(),
+            row.PLACE.trim()
+          )
+          console.log(college)
+          return {
+            slno: row.SLNO?.toString() || "",
+            course_name: row.COURSE?.toString() || "",
+            college_id: college?.id || "",
+            duration_years: 4, // Default value
+            fees: {
+              total: parseFloat(row["TOTAL FEE"] || "0"),
+              firstYear: parseFloat(row["1ST YR"] || "0"),
+              secondYear: parseFloat(row["2ND YR"] || "0"),
+              thirdYear: parseFloat(row["3RD YR"] || "0"),
+              fourthYear: parseFloat(row["4TH YR"] || "0"),
+            },
+            hostel_food_fee: parseFloat(row["HOSTEL/FOOD"] || "0"),
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }
+        })
+      )
+
+      
+      await bulkAddMutation.mutateAsync(courses)
+      
+      
       setFile(null)
       setParsedData([])
       setError(null)
+      setValidation(null)
       setOpen(false)
+
+      toast.success(`Successfully uploaded ${courses.length} courses`)
     } catch (err) {
-      setError("Failed to process the CSV data. Please check the format.")
+      setError("Failed to process the data. Please try again.")
+      toast.error("Failed to process the data")
+    } finally {
+      setIsProcessing(false)
     }
   }
 
@@ -188,6 +279,43 @@ export function BulkUploadCoursesModal({ onBulkUpload }: BulkUploadCoursesModalP
             </div>
           </div>
           
+          {/* Validation Results */}
+          {validation && (
+            <div className="space-y-3">
+              {validation.existingColleges.length > 0 && (
+                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                  <div className="flex items-center gap-3">
+                    <Building2 className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-blue-800">
+                        Existing Colleges Found ({validation.existingColleges.length})
+                      </p>
+                      
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {validation.newColleges.length > 0 && (
+                <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
+                  <div className="flex items-center gap-3">
+                    <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-amber-800">
+                        New Colleges to Create ({validation.newColleges.length})
+                      </p>
+                      <div className="mt-2 text-xs text-amber-600 space-y-1">
+                        {validation.newColleges.map((college, idx) => (
+                          <p key={idx}>{college.name} - {college.place}</p>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Status Messages */}
           {parsedData.length > 0 && (
             <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-100">
@@ -204,18 +332,13 @@ export function BulkUploadCoursesModal({ onBulkUpload }: BulkUploadCoursesModalP
               </div>
             </div>
           )}
-          
+
           {error && (
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-100">
+            <div className="bg-red-50 rounded-xl p-4 border border-red-100">
               <div className="flex items-center gap-3">
-                <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+                <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-amber-800">
-                    {error}
-                  </p>
-                  <p className="text-xs text-amber-600 mt-1">
-                    Please check your CSV file and try again.
-                  </p>
+                  <p className="text-sm font-medium text-red-800">{error}</p>
                 </div>
               </div>
             </div>
@@ -228,16 +351,22 @@ export function BulkUploadCoursesModal({ onBulkUpload }: BulkUploadCoursesModalP
             variant="outline" 
             onClick={() => setOpen(false)}
             className="border-gray-300"
+            disabled={isProcessing}
           >
             Cancel
           </Button>
           <Button 
             type="button" 
             onClick={handleSubmit}
-            disabled={parsedData.length === 0}
+            disabled={parsedData.length === 0 || isProcessing || bulkAddMutation.isPending}
             className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white hover:from-teal-600 hover:to-cyan-700"
           >
-            {parsedData.length > 0 ? (
+            {isProcessing || bulkAddMutation.isPending ? (
+              <>
+                <ArrowRight className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : parsedData.length > 0 ? (
               <>
                 Upload {parsedData.length} Courses
                 <ArrowRight className="ml-2 h-4 w-4" />
