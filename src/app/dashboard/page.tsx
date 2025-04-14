@@ -37,7 +37,7 @@ export default function DashboardPage() {
 
       {userRole === "agent" ? (
         <div>
-          <p className="mb-4">Welcome to your agent dashboard! You have full access to all features.</p>
+          <p className="mb-4">Welcome to your agent dashboard.</p>
           {/* Agent-specific content */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <Card>
@@ -70,7 +70,7 @@ export default function DashboardPage() {
         </div>
       ) : (
         <div>
-          <p className="mb-4">Welcome to your sub-agent dashboard! You can manage your assigned applications.</p>
+          <p className="mb-4">Welcome to your sub-agent dashboard.</p>
           {/* Sub-agent-specific content */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>

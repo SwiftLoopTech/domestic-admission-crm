@@ -155,6 +155,12 @@ export function AddCourseModal() {
                       <Input 
                         type="number" 
                         {...field} 
+                        onFocus={e => {
+                          if (e.target.value === "0") {
+                            e.target.value = ""
+                            field.onChange("")
+                          }
+                        }}
                         onChange={e => field.onChange(Number(e.target.value))}
                         placeholder="Enter total fee" 
                       />
@@ -175,6 +181,12 @@ export function AddCourseModal() {
                         <Input 
                           type="number" 
                           {...field} 
+                          onFocus={e => {
+                            if (e.target.value === "0") {
+                              e.target.value = ""
+                              field.onChange("")
+                            }
+                          }}
                           onChange={e => field.onChange(Number(e.target.value))}
                           placeholder="Enter first year fee" 
                         />
@@ -194,6 +206,12 @@ export function AddCourseModal() {
                         <Input 
                           type="number" 
                           {...field} 
+                          onFocus={e => {
+                            if (e.target.value === "0") {
+                              e.target.value = ""
+                              field.onChange("")
+                            }
+                          }}
                           onChange={e => field.onChange(Number(e.target.value))}
                           placeholder="Enter second year fee" 
                         />
@@ -213,6 +231,12 @@ export function AddCourseModal() {
                         <Input 
                           type="number" 
                           {...field} 
+                          onFocus={e => {
+                            if (e.target.value === "0") {
+                              e.target.value = ""
+                              field.onChange("")
+                            }
+                          }}
                           onChange={e => field.onChange(Number(e.target.value))}
                           placeholder="Enter third year fee" 
                         />
@@ -232,6 +256,12 @@ export function AddCourseModal() {
                         <Input 
                           type="number" 
                           {...field} 
+                          onFocus={e => {
+                            if (e.target.value === "0") {
+                              e.target.value = ""
+                              field.onChange("")
+                            }
+                          }}
                           onChange={e => field.onChange(Number(e.target.value))}
                           placeholder="Enter fourth year fee" 
                         />
@@ -252,6 +282,12 @@ export function AddCourseModal() {
                       <Input 
                         type="number" 
                         {...field} 
+                        onFocus={e => {
+                          if (e.target.value === "0") {
+                            e.target.value = ""
+                            field.onChange("")
+                          }
+                        }}
                         onChange={e => field.onChange(Number(e.target.value))}
                         placeholder="Enter hostel and food fee" 
                       />
