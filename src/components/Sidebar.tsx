@@ -11,8 +11,9 @@ import {
   LucideLogOut,
   LucideUserPlus,
   LucideMenu,
+  LucideX,
   LucideChevronRight,
-  LucideLoader2
+  LucideUniversity
 } from "lucide-react";
 import { supabase } from "@/utils/supabase";
 
@@ -33,7 +34,7 @@ import {
   SheetTitle
 } from "@/components/ui/sheet";
 import { VisuallyHidden } from "@/components/ui/visually-hidden";
-import { useAgentData } from "@/hooks/useAgentData";
+import { Badge } from "@/components/ui/badge";
 
 interface SidebarProps {
   userRole: "agent" | "sub-agent" | null;
@@ -81,41 +82,37 @@ export function Sidebar({ userRole }: SidebarProps) {
         name: "Sub-Agents",
         href: "/dashboard/sub-agents",
         icon: LucideUserPlus
+      },
+      {
+        name: "Colleges",
+        href: "/dashboard/colleges",
+        icon: LucideUniversity
       }
     ];
 
-    return userRole === "agent"
-      ? [...baseItems, ...agentOnlyItems]
-      : [...baseItems];
+    return userRole === "agent" ? [...baseItems, ...agentOnlyItems] : [...baseItems];
   };
 
   const navItems = getNavItems();
-  const { agent, isLoading: isLoadingAgent } = useAgentData();
-
-  // Get user initials from name or fallback
-  const userInitials = agent?.name
-    ? agent.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2)
-    : userRole === "agent" ? "AG" : "SA";
-
-  // Get user name from agent data or fallback
-  const userName = agent?.name || (userRole === "agent" ? "Agent" : "Sub-Agent");
+  const userInitials = "JD"; // Replace with actual user initials
+  const userName = "John Doe"; // Replace with actual user name
 
   const sidebarContent = (
-    <div className="flex h-full flex-col bg-white text-sidebar-foreground">
+    <div className="flex h-full flex-col bg-teal-50">
       {/* Header with user info */}
-      <div className="p-4 border-b bg-white">
+      <div className="p-6  bg-gradient-to-r from-teal-500 to-cyan-600">
         <div className="flex items-center gap-3">
-          <Avatar>
+          <Avatar className="h-10 w-10 border-2 border-white/20">
             <AvatarImage src="" alt={userName} />
-            <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground">
-              {isLoadingAgent ? <LucideLoader2 className="h-4 w-4 animate-spin" /> : userInitials}
+            <AvatarFallback className="bg-white/90 text-teal-800 font-medium">
+              {userInitials}
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
-            <span className="text-sm font-semibold truncate">
-              {isLoadingAgent ? "Loading..." : userName}
+            <span className="text-sm font-semibold text-white truncate">
+              {userName}
             </span>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-teal-50">
               {userRole === "agent" ? "Administrator" : "Limited access"}
             </span>
           </div>
@@ -123,8 +120,8 @@ export function Sidebar({ userRole }: SidebarProps) {
       </div>
 
       {/* Navigation menu */}
-      <ScrollArea className="flex-1 py-4 bg-white">
-        <nav className="flex flex-col px-3 space-y-1">
+      <ScrollArea className="flex-1 py-6 px-4">
+        <nav className="flex flex-col space-y-2">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -136,22 +133,25 @@ export function Sidebar({ userRole }: SidebarProps) {
                     <Link
                       href={item.href}
                       className={cn(
-                        "flex items-center justify-between h-10 px-3 py-2 text-sm rounded-md",
-                        "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors",
+                        "flex items-center justify-between h-10 px-3 py-2 text-sm rounded-lg transition-all duration-200",
+                        "hover:bg-teal-50 hover:text-teal-700",
                         isActive
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                          : "text-sidebar-foreground"
+                          ? "bg-teal-100 text-teal-700 font-medium shadow-sm"
+                          : "text-gray-600"
                       )}
                       onClick={() => setOpen(false)}
                     >
                       <div className="flex items-center gap-3">
-                        <Icon size={16} />
+                        <Icon size={18} className={isActive ? "text-teal-600" : "text-gray-500"} />
                         <span>{item.name}</span>
                       </div>
 
-                      {isActive && (
-                        <LucideChevronRight size={14} className="ml-auto" />
-                      )}
+                      <div className="flex items-center gap-2">
+                        
+                        {isActive && (
+                          <LucideChevronRight size={16} className="text-teal-600" />
+                        )}
+                      </div>
                     </Link>
                   </TooltipTrigger>
                 </Tooltip>
@@ -162,12 +162,11 @@ export function Sidebar({ userRole }: SidebarProps) {
       </ScrollArea>
 
       {/* Footer with sign out button */}
-      <div className="p-3 border-t mt-auto bg-white text-black">
-        <Separator className="mt-2" />
+      <div className="p-4  mt-auto">
         <Button
-          variant="destructive"
-          className="w-full hover:cursor-pointer text-black"
-          onClick={handleSignOut}
+          variant="outline"
+          className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+          onClick={onSignOut}
         >
           <LucideLogOut className="mr-2 h-4 w-4" />
           Sign out
@@ -182,12 +181,11 @@ export function Sidebar({ userRole }: SidebarProps) {
       <div className="lg:hidden fixed top-4 left-4 z-30">
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="bg-white">
-              <LucideMenu />
+            <Button variant="outline" size="icon" className="bg-white shadow-md">
+              <LucideMenu className="text-gray-700" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-64 bg-white">
-            {/* Add SheetTitle for accessibility */}
+          <SheetContent side="left" className="p-0 w-72">
             <SheetTitle>
               <VisuallyHidden>Navigation Menu</VisuallyHidden>
             </SheetTitle>
@@ -197,7 +195,7 @@ export function Sidebar({ userRole }: SidebarProps) {
       </div>
 
       {/* Desktop sidebar - hidden on mobile */}
-      <aside className="hidden lg:flex w-64 border-r h-screen flex-col bg-white text-sidebar-foreground">
+      <aside className="hidden lg:flex w-72  h-screen flex-col bg-white">
         {sidebarContent}
       </aside>
     </>

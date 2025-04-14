@@ -5,7 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
-import { PlusCircle, Loader2 } from "lucide-react";
+import { PlusCircle } from "lucide-react";
+import { Database } from "@/types/supabase";
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogFooter, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,8 @@ import { useSubagents } from "@/hooks/useSubagents";
 import { useApplications } from "@/hooks/useApplications";
 import { getCurrentUserId } from "@/utils/agents.supabase";
 import { APPLICATION_STATUS } from "@/utils/application-status";
+
+type College = Database['public']['Tables']['colleges']['Row'];
 
 // Define form schema with Zod
 const applicationSchema = z.object({
@@ -106,8 +109,8 @@ export function ApplicationModal() {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[600px] bg-white">
+        <DialogHeader className="border-b">
           <DialogTitle>Create New Application</DialogTitle>
           <DialogDescription>
             Fill in the form below to create a new student application.
