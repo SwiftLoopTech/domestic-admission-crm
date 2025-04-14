@@ -74,11 +74,6 @@ export function Sidebar({ userRole }: SidebarProps) {
     // Items only for agents (not sub-agents)
     const agentOnlyItems = [
       {
-        name: "Students",
-        href: "/dashboard/students",
-        icon: LucideUsers
-      },
-      {
         name: "Sub-Agents",
         href: "/dashboard/sub-agents",
         icon: LucideUserPlus
@@ -166,6 +161,7 @@ export function Sidebar({ userRole }: SidebarProps) {
         <Button
           variant="outline"
           className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+          onClick={()=> handleSignOut()}
         >
           <LucideLogOut className="mr-2 h-4 w-4" />
           Sign out
