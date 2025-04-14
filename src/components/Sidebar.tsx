@@ -166,7 +166,6 @@ export function Sidebar({ userRole }: SidebarProps) {
         <Button
           variant="outline"
           className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-          onClick={onSignOut}
         >
           <LucideLogOut className="mr-2 h-4 w-4" />
           Sign out
@@ -201,3 +200,4 @@ export function Sidebar({ userRole }: SidebarProps) {
     </>
   );
 }
+
