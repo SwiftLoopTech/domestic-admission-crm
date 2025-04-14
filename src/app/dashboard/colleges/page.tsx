@@ -49,7 +49,7 @@ export default function CollegesPage() {
   return (
     <div className="space-y-6">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-teal-500 to-cyan-600 rounded-xl p-6 shadow-lg">
+      <div className="bg-black rounded-xl p-6 shadow-lg">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="space-y-1">
             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
@@ -63,7 +63,7 @@ export default function CollegesPage() {
             <Link href="/dashboard/colleges/courses">
               <Button 
                 variant="outline" 
-                className="bg-teal-50 hover:bg-teal-100 border-teal-200 text-teal-700 w-full sm:w-auto"
+                className="bg-white text-black w-full sm:w-auto"
               >
                 <BookOpenIcon className="mr-2 h-4 w-4" />
                 Manage Courses

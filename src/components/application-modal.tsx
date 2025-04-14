@@ -103,15 +103,15 @@ export function ApplicationModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="border-[1px] border-black hover:cursor-pointer hover:shadow-md">
+        <Button className="bg-zinc-900 text-white hover:cursor-pointer hover:shadow-md">
           <PlusCircle className="mr-2 h-4 w-4" />
           New Application
         </Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-[600px] bg-white">
-        <DialogHeader className="border-b">
-          <DialogTitle>Create New Application</DialogTitle>
+        <DialogHeader className="mb-4">
+          <DialogTitle className="text-xl">Create New Application</DialogTitle>
           <DialogDescription>
             Fill in the form below to create a new student application.
           </DialogDescription>
@@ -128,7 +128,7 @@ export function ApplicationModal() {
                   <FormItem>
                     <FormLabel>Student Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter student's full name" {...field} />
+                      <Input className="border-zinc-500" placeholder="Enter student's full name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -143,7 +143,7 @@ export function ApplicationModal() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="student@example.com" type="email" {...field} />
+                      <Input className="border-zinc-500" placeholder="student@example.com" type="email" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -160,7 +160,7 @@ export function ApplicationModal() {
                   <FormItem>
                     <FormLabel>Phone Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter phone number" {...field} />
+                      <Input className="border-zinc-500" placeholder="Enter phone number" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -180,8 +180,8 @@ export function ApplicationModal() {
                         value={field.value || ""}
                       >
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select sub-agent (optional)" />
+                          <SelectTrigger className="border-zinc-500">
+                            <SelectValue  placeholder="Select sub-agent (optional)" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="bg-white">
@@ -219,7 +219,7 @@ export function ApplicationModal() {
                       value={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="border-zinc-500">
                           <SelectValue placeholder="Select a college" />
                         </SelectTrigger>
                       </FormControl>
@@ -248,7 +248,7 @@ export function ApplicationModal() {
                       value={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="border-zinc-500">
                           <SelectValue placeholder="Select a course" />
                         </SelectTrigger>
                       </FormControl>
@@ -276,7 +276,7 @@ export function ApplicationModal() {
                   <FormControl>
                     <Textarea
                       placeholder="Enter any additional notes or comments"
-                      className="min-h-[100px]"
+                      className="min-h-[100px] border-zinc-500"
                       {...field}
                     />
                   </FormControl>
@@ -290,13 +290,14 @@ export function ApplicationModal() {
                 type="button"
                 variant="outline"
                 onClick={() => setOpen(false)}
+                className="cursor-pointer"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                variant="outline"
                 disabled={isCreating}
+                className="bg-black text-white cursor-pointer"
               >
                 {isCreating ? (
                   <>

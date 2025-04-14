@@ -56,6 +56,8 @@ export function LoginForm({
                   id="email"
                   type="email"
                   placeholder="m@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
@@ -63,7 +65,10 @@ export function LoginForm({
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
                 </div>
-                <Input id="password" type="password" required />
+                <Input type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required />
               </div>
               <Button type="submit" onClick={handleLogin} className="w-full bg-zinc-800 text-white cursor-pointer">
                 Login

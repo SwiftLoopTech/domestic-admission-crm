@@ -91,13 +91,13 @@ export function AddCollegeModal(){
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white hover:from-teal-600 hover:to-cyan-700">
+        <Button className="bg-indigo-600 text-white">
           <PlusIcon className="mr-2 h-4 w-4" />
           Add College
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] p-0 bg-white border-none">
-        <DialogHeader className="bg-gradient-to-r from-teal-500 to-cyan-600 p-6 rounded-t-lg">
+        <DialogHeader className="bg-black p-6 rounded-t-lg">
           <DialogTitle className="text-white flex items-center gap-2">
             <BuildingIcon className="h-5 w-5" />
             Add New College
@@ -225,7 +225,7 @@ export function AddCollegeModal(){
               <Button
                 type="submit"
                 disabled={addCollegeMutation.isPending}
-                className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white hover:from-teal-600 hover:to-cyan-700 disabled:opacity-70 disabled:cursor-not-allowed"
+                className="bg-black text-white disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {addCollegeMutation.isPending ? (
                   <>

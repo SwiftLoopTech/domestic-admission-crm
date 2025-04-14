@@ -37,12 +37,12 @@ export function CollegeCard({ college, onDelete }: CollegeCardProps) {
       <Card className="group hover:shadow-lg transition-shadow duration-200">
         <CardHeader className="space-y-3">
           <div className="flex items-start justify-between">
-            <Badge variant="outline" className="bg-teal-50 text-teal-700 hover:bg-teal-100">
+            <Badge variant="outline" className="bg-teal-50 text-black hover:bg-teal-100">
               Institution
             </Badge>
           </div>
           <CardTitle className="text-xl flex items-center">
-            <BuildingIcon className="h-6 w-6 mr-2 text-teal-600" />
+            <BuildingIcon className="h-6 w-6 mr-2 text-black" />
             {college.name}
           </CardTitle>
           <CardDescription className="flex items-center text-base">
@@ -92,7 +92,7 @@ export function CollegeCard({ college, onDelete }: CollegeCardProps) {
           <Button 
             variant="outline"
             size="sm"
-            className="text-teal-600 hover:text-teal-700 hover:bg-teal-50"
+            className="text-white bg-black hover:text-indigo-700 hover:bg-teal-50"
             asChild
           >
             <Link href={`/dashboard/colleges/${college.id}`}>

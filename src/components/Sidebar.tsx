@@ -100,8 +100,8 @@ export function Sidebar({ userRole }: SidebarProps) {
   const sidebarContent = (
     <div className="flex h-full flex-col bg-teal-50">
       {/* Header with user info */}
-      <div className="p-6  bg-gradient-to-r from-teal-500 to-cyan-600">
-        <div className="flex items-center gap-3">
+      <div className="p-2">
+        <div className="flex items-center gap-3 bg-zinc-900 p-4 rounded-lg">
           <Avatar className="h-10 w-10 border-2 border-white/20">
             <AvatarImage src="" alt={userName} />
             <AvatarFallback className="bg-white/90 text-teal-800 font-medium">
@@ -136,20 +136,20 @@ export function Sidebar({ userRole }: SidebarProps) {
                         "flex items-center justify-between h-10 px-3 py-2 text-sm rounded-lg transition-all duration-200",
                         "hover:bg-teal-50 hover:text-teal-700",
                         isActive
-                          ? "bg-teal-100 text-teal-700 font-medium shadow-sm"
+                          ? "text-black font-medium"
                           : "text-gray-600"
                       )}
                       onClick={() => setOpen(false)}
                     >
                       <div className="flex items-center gap-3">
-                        <Icon size={18} className={isActive ? "text-teal-600" : "text-gray-500"} />
+                        <Icon size={18} className={isActive ? "text-black" : "text-gray-500"} />
                         <span>{item.name}</span>
                       </div>
 
                       <div className="flex items-center gap-2">
                         
                         {isActive && (
-                          <LucideChevronRight size={16} className="text-teal-600" />
+                          <LucideChevronRight size={16} className="text-black" />
                         )}
                       </div>
                     </Link>

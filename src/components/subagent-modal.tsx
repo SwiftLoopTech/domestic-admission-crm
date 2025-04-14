@@ -63,7 +63,7 @@ export function SubagentModal({ onSubagentCreated }: SubagentModalProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="border-[1px] border-black hover:cursor-pointer hover:shadow-md">
+        <Button className="bg-black text-white hover:cursor-pointer hover:shadow-md">
           <PlusCircle className="mr-2 h-4 w-4" />
           Add Subagent
         </Button>
@@ -134,6 +134,7 @@ export function SubagentModal({ onSubagentCreated }: SubagentModalProps) {
                 type="button"
                 variant="outline"
                 onClick={() => setOpen(false)}
+                className="cursor-pointer"
               >
                 Cancel
               </Button>
@@ -141,6 +142,7 @@ export function SubagentModal({ onSubagentCreated }: SubagentModalProps) {
                 type="submit"
                 variant="outline"
                 disabled={isCreating}
+                className="bg-black text-white cursor-pointer" 
               >
                 {isCreating ? (
                   <>
