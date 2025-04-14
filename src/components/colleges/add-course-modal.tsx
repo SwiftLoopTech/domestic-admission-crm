@@ -92,7 +92,7 @@ export function AddCourseModal() {
                 name="slno"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Serial Number</FormLabel>
+                    <FormLabel>Serial Number*</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="Enter serial number" />
                     </FormControl>
@@ -106,7 +106,7 @@ export function AddCourseModal() {
                 name="college_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>College</FormLabel>
+                    <FormLabel>College*</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -131,7 +131,7 @@ export function AddCourseModal() {
                 name="course_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Course Name</FormLabel>
+                    <FormLabel>Course Name*</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="Enter course name" />
                     </FormControl>
@@ -150,7 +150,7 @@ export function AddCourseModal() {
                 name="fees.total"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Total Fee</FormLabel>
+                    <FormLabel>Total Fee*</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
@@ -170,7 +170,7 @@ export function AddCourseModal() {
                   name="fees.firstYear"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>First Year Fee</FormLabel>
+                      <FormLabel>First Year Fee*</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
@@ -189,7 +189,7 @@ export function AddCourseModal() {
                   name="fees.secondYear"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Second Year Fee</FormLabel>
+                      <FormLabel>Second Year Fee*</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
@@ -208,7 +208,7 @@ export function AddCourseModal() {
                   name="fees.thirdYear"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Third Year Fee</FormLabel>
+                      <FormLabel>Third Year Fee*</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
@@ -227,7 +227,7 @@ export function AddCourseModal() {
                   name="fees.fourthYear"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Fourth Year Fee</FormLabel>
+                      <FormLabel>Fourth Year Fee*</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
@@ -247,7 +247,7 @@ export function AddCourseModal() {
                 name="hostel_food_fee"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Hostel & Food Fee (per year)</FormLabel>
+                    <FormLabel>Hostel & Food Fee (per year)*</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 

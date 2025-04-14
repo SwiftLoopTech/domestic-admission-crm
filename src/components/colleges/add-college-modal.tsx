@@ -124,7 +124,7 @@ export function AddCollegeModal(){
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>College Name</FormLabel>
+                        <FormLabel>College Name*</FormLabel>
                         <FormControl>
                           <Input placeholder="Enter college name" {...field} />
                         </FormControl>
@@ -138,7 +138,7 @@ export function AddCollegeModal(){
                     name="location"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Location</FormLabel>
+                        <FormLabel>Location*</FormLabel>
                         <FormControl>
                           <Input placeholder="City, State" {...field} />
                         </FormControl>

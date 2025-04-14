@@ -77,7 +77,7 @@ export default function SignupPage() {
             <form onSubmit={handleSignup}>
               <div className="flex flex-col gap-6">
                 <div className="grid gap-3">
-                  <Label htmlFor="name">Name</Label>
+                  <Label htmlFor="name">Name*</Label>
                   <Input
                     id="name"
                     type="text"
@@ -89,7 +89,7 @@ export default function SignupPage() {
                   />
                 </div>
                 <div className="grid gap-3">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">Email*</Label>
                   <Input
                     id="email"
                     type="email"
@@ -101,7 +101,7 @@ export default function SignupPage() {
                   />
                 </div>
                 <div className="grid gap-3">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">Password*</Label>
                   <Input
                     id="password"
                     type="password"
