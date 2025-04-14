@@ -25,21 +25,26 @@ export const useAddCollege = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ 
-      brochureFile, 
-      collegeData 
-    }: { 
-      brochureFile: File | null; 
-      collegeData: CreateCollegeInput 
+    mutationFn: async ({
+      brochureFile,
+      collegeData
+    }: {
+      brochureFile: File | null;
+      collegeData: CreateCollegeInput
     }) => {
       return await collegeService.createCollege(brochureFile, collegeData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['colleges'] });
-      toast.success('College added successfully');
+      toast.success('College added successfully', {
+        style: { backgroundColor: '#10B981', color: 'white' },
+      });
     },
     onError: (error: Error) => {
-      toast.error('Failed to add college: ' + error.message);
+      toast.error('Failed to add college: ' + error.message, {
+        style: { backgroundColor: '#991B1B', color: 'white' },
+        icon: '❌'
+      });
     },
   });
 };
@@ -48,21 +53,26 @@ export const useUpdateCollege = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ 
-      id, 
-      data 
-    }: { 
-      id: string; 
-      data: Partial<CreateCollegeInput> 
+    mutationFn: async ({
+      id,
+      data
+    }: {
+      id: string;
+      data: Partial<CreateCollegeInput>
     }) => {
       return await collegeService.updateCollege(id, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['colleges'] });
-      toast.success('College updated successfully');
+      toast.success('College updated successfully', {
+        style: { backgroundColor: '#3B82F6', color: 'white' },
+      });
     },
     onError: (error: Error) => {
-      toast.error('Failed to update college: ' + error.message);
+      toast.error('Failed to update college: ' + error.message, {
+        style: { backgroundColor: '#991B1B', color: 'white' },
+        icon: '❌'
+      });
     },
   });
 };
@@ -76,10 +86,15 @@ export const useDeleteCollege = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['colleges'] });
-      toast.success('College deleted successfully');
+      toast.success('College deleted successfully', {
+        style: { backgroundColor: '#EF4444', color: 'white' },
+      });
     },
     onError: (error: Error) => {
-      toast.error('Failed to delete college: ' + error.message);
+      toast.error('Failed to delete college: ' + error.message, {
+        style: { backgroundColor: '#991B1B', color: 'white' },
+        icon: '❌'
+      });
     },
   });
 };
