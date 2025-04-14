@@ -25,6 +25,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 
 interface DocumentUploadProps {
   applicationId: string;
+  applicationStatus: string;
   onDocumentUploaded?: () => void;
 }
 
@@ -39,15 +40,23 @@ interface DocumentField {
 
 export function DocumentUpload({
   applicationId,
+  applicationStatus,
   onDocumentUploaded
 }: DocumentUploadProps) {
   const [documentFields, setDocumentFields] = useState<DocumentField[]>([]);
   const [newFieldName, setNewFieldName] = useState("");
   const [isAddingField, setIsAddingField] = useState(false);
   const [documentLinks, setDocumentLinks] = useState<string[]>([]);
-  const { updateStatus, isUpdatingStatus } = useApplications();
+  const { updateStatus, isUpdatingStatus, updateApplication } = useApplications();
   const { userRole } = useUserRole();
   const isAgent = userRole === "agent";
+
+  // Determine if the user can upload documents based on role and application status
+  const canUploadDocuments = (isAgent || applicationStatus === "Verified") && applicationStatus !== "Completed";
+
+  // Check if the application is already marked as documents uploaded or completed
+  const isDocumentsUploaded = applicationStatus === APPLICATION_STATUS.DOCUMENTS_UPLOADED;
+  const isCompleted = applicationStatus === APPLICATION_STATUS.COMPLETED;
 
   // Fetch existing document links when component mounts
   useEffect(() => {
@@ -55,17 +64,15 @@ export function DocumentUpload({
       try {
         const { data, error } = await supabase
           .from('applications')
-          .select('document_links, application_status')
+          .select('document_links')
           .eq('id', applicationId)
           .single();
 
         if (error) throw error;
 
         if (data) {
-          // Check if documents can be uploaded based on status
-          if (data.application_status !== 'Verified' && 
-              data.application_status !== 'processing' && 
-              !(isAgent && data.application_status === 'Documents Uploaded')) {
+          // Check if documents can be uploaded based on role and status
+          if (!canUploadDocuments) {
             toast.info("Documents can only be uploaded when application is in Verified status");
           }
 
@@ -101,6 +108,11 @@ export function DocumentUpload({
   }, [applicationId, isAgent]);
 
   const addDocumentField = () => {
+    if (!canUploadDocuments) {
+      toast.error("You don't have permission to add document fields");
+      return;
+    }
+
     if (!newFieldName.trim()) {
       toast.error("Please enter a document name");
       return;
@@ -120,6 +132,11 @@ export function DocumentUpload({
   };
 
   const removeDocumentField = (id: string) => {
+    if (!canUploadDocuments) {
+      toast.error("You don't have permission to remove document fields");
+      return;
+    }
+
     setDocumentFields(documentFields.filter(field => field.id !== id));
   };
 
@@ -138,6 +155,11 @@ export function DocumentUpload({
   };
 
   const uploadDocument = async (fieldId: string) => {
+    if (!canUploadDocuments) {
+      toast.error("You don't have permission to upload documents");
+      return;
+    }
+
     const field = documentFields.find(f => f.id === fieldId);
     if (!field || !field.file) {
       toast.error("No file selected");
@@ -225,16 +247,25 @@ export function DocumentUpload({
   };
 
   const handleCompleteDocuments = async () => {
-    try {
-      await updateStatus({
-        applicationId,
-        newStatus: APPLICATION_STATUS.DOCUMENTS_UPLOADED
-      });
+    // Only agents and subagents with verified applications can mark documents as complete
+    if (!canUploadDocuments) {
+      toast.error("You don't have permission to mark documents as complete");
+      return;
+    }
 
-      toast.success("Application status updated to Documents Uploaded");
-    } catch (error: any) {
-      console.error("Error updating status:", error);
-      toast.error(`Failed to update status: ${error.message}`);
+    // Confirm before changing status
+    if (confirm("Are you sure you want to mark documents as complete? This will change the application status.")) {
+      try {
+        await updateStatus({
+          applicationId,
+          newStatus: APPLICATION_STATUS.DOCUMENTS_UPLOADED
+        });
+
+        toast.success("Application status updated to Documents Uploaded");
+      } catch (error: any) {
+        console.error("Error updating status:", error);
+        toast.error(`Failed to update status: ${error.message}`);
+      }
     }
   };
 
@@ -243,8 +274,15 @@ export function DocumentUpload({
 
   return (
     <div className="space-y-4">
+      {!canUploadDocuments && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-sm text-yellow-800">
+          Documents can only be uploaded when the application status is Verified.
+          {!isAgent && " Only agents can upload documents in other statuses."}
+        </div>
+      )}
+
       {/* Document fields */}
-      <div className="space-y-4">
+      {/* <div className="space-y-4">
         {documentFields.map(field => (
           <div key={field.id} className="border rounded-md p-4 space-y-2">
             <div className="flex items-center justify-between">
@@ -301,10 +339,10 @@ export function DocumentUpload({
             )}
           </div>
         ))}
-      </div>
+      </div> */}
 
-      {/* Add new document field */}
-      {isAddingField ? (
+      {/* Add new document field - only show if user can upload documents */}
+      {canUploadDocuments && !isDocumentsUploaded && !isCompleted && (isAddingField ? (
         <div className="border rounded-md p-4 space-y-2">
           <Label htmlFor="new-field-name">Document Name</Label>
           <div className="flex items-center gap-2">
@@ -333,21 +371,22 @@ export function DocumentUpload({
         </div>
       ) : (
         <Button
-          variant="outline"
-          className="w-full"
+          variant="default"
+          className="w-full bg-black text-white hover:bg-gray-800 hover:cursor-pointer"
           onClick={() => setIsAddingField(true)}
         >
           <Plus className="h-4 w-4 mr-1" />
           Add Document Field
         </Button>
-      )}
+      ))}
 
-      {/* Mark documents as complete button */}
-      {hasUploadedDocuments && (
+      {/* Mark documents as complete button - only show if not already marked as complete */}
+      {hasUploadedDocuments && !isDocumentsUploaded && !isCompleted && (
         <Button
           onClick={handleCompleteDocuments}
           disabled={isUpdatingStatus}
-          className="w-full"
+          className="w-full p-2 border-2 border-black hover:bg-gray-200 hover:cursor-pointer"
+          variant="default"
         >
           {isUpdatingStatus ? (
             <>

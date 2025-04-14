@@ -12,6 +12,16 @@ interface ApplicationInput {
   subagent_id?: string | null;
 }
 
+interface ApplicationUpdateInput {
+  student_name?: string;
+  email?: string;
+  phone?: string;
+  preferred_college?: string;
+  preferred_course?: string;
+  notes?: string;
+  document_links?: string[];
+}
+
 export async function createApplication(data: ApplicationInput) {
   try {
     // Get current user's ID
@@ -161,9 +171,91 @@ export async function updateApplicationStatus(applicationId: string, newStatus: 
 }
 
 /**
- * Gets all applications for the current authenticated user
- * @returns An array of application records
+ * Updates an application's details
+ * @param applicationId The ID of the application to update
+ * @param data The data to update
+ * @param isAgent Whether the current user is an agent (for permission checks)
+ * @returns The updated application
  */
+export async function updateApplication(applicationId: string, data: ApplicationUpdateInput, isAgent: boolean) {
+  try {
+    // Get current user's ID
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      throw new Error("No authenticated user found");
+    }
+
+    // Get the application to check permissions
+    const { data: applicationData, error: applicationError } = await supabase
+      .from('applications')
+      .select('*')
+      .eq('id', applicationId)
+      .single();
+
+    if (applicationError) {
+      console.error('Error fetching application:', applicationError);
+      throw new Error(`Failed to fetch application: ${applicationError.message}`);
+    }
+
+    // If user is a subagent, they can only update notes
+    // and documents if status is 'Verified'
+    if (!isAgent) {
+      // Create a new object with only the allowed fields
+      const allowedData: ApplicationUpdateInput = {};
+
+      // Notes can always be updated by subagents
+      if (data.notes !== undefined) {
+        allowedData.notes = data.notes;
+      }
+
+      // Documents can only be updated if status is 'Verified'
+      if (applicationData.application_status === 'Verified' && data.document_links !== undefined) {
+        allowedData.document_links = data.document_links;
+      }
+
+      // Update with restricted fields
+      const { data: updatedData, error } = await supabase
+        .from('applications')
+        .update({
+          ...allowedData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', applicationId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating application:', error);
+        throw new Error(`Failed to update application: ${error.message}`);
+      }
+
+      return updatedData;
+    }
+
+    // For agents, allow updating all fields
+    const { data: updatedData, error } = await supabase
+      .from('applications')
+      .update({
+        ...data,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', applicationId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating application:', error);
+      throw new Error(`Failed to update application: ${error.message}`);
+    }
+
+    return updatedData;
+  } catch (error) {
+    console.error('Update application error:', error);
+    throw error;
+  }
+}
+
 export async function getApplications() {
   // Get current user's ID
   const { data: { session } } = await supabase.auth.getSession();
