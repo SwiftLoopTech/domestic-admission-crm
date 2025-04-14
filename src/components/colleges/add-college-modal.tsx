@@ -1,16 +1,16 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Database } from "@/types/supabase";
 import { useAddCollege } from "@/hooks/useColleges";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogDescription,
   DialogFooter,
   DialogTrigger
@@ -88,6 +88,14 @@ export function AddCollegeModal(){
     }
   };
 
+  // Reset form when dialog is closed
+  useEffect(() => {
+    if (!open) {
+      form.reset();
+      setBrochureFile(null);
+    }
+  }, [open, form]);
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -106,7 +114,7 @@ export function AddCollegeModal(){
             Enter the institution details to add it to the system
           </DialogDescription>
         </DialogHeader>
-        
+
         <Form {...form}>
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-6">
@@ -117,7 +125,7 @@ export function AddCollegeModal(){
                   <BuildingIcon className="h-4 w-4" />
                   Institution Details
                 </h3>
-                
+
                 <div className="space-y-4">
                   <FormField
                     control={form.control}
@@ -132,7 +140,7 @@ export function AddCollegeModal(){
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="location"
@@ -155,7 +163,7 @@ export function AddCollegeModal(){
                   <PhoneIcon className="h-4 w-4" />
                   Contact Information
                 </h3>
-                
+
                 <div className="space-y-4">
                   <FormField
                     control={form.control}
@@ -164,9 +172,9 @@ export function AddCollegeModal(){
                       <FormItem>
                         <FormLabel>Contact Number</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="tel" 
-                            placeholder="Enter contact number" 
+                          <Input
+                            type="tel"
+                            placeholder="Enter contact number"
                             {...field}
                             value={field.value || ''}
                           />
@@ -183,9 +191,9 @@ export function AddCollegeModal(){
                       <FormItem>
                         <FormLabel>Website URL</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="url" 
-                            placeholder="https://example.edu" 
+                          <Input
+                            type="url"
+                            placeholder="https://example.edu"
                             {...field}
                             value={field.value || ''}
                           />
@@ -203,20 +211,20 @@ export function AddCollegeModal(){
                   <FileIcon className="h-4 w-4" />
                   Documents
                 </h3>
-                
-                <FileUpload 
-                  onFileChange={setBrochureFile} 
-                  label="College Brochure" 
-                  accept=".pdf,.doc,.docx" 
+
+                <FileUpload
+                  onFileChange={setBrochureFile}
+                  label="College Brochure"
+                  accept=".pdf,.doc,.docx"
                   maxSize={10}
                 />
               </div>
             </div>
 
             <DialogFooter className="pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setOpen(false)}
                 className="border-gray-300"
               >
@@ -231,7 +239,7 @@ export function AddCollegeModal(){
                   <>
                     <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
                     Adding...
-                  </> 
+                  </>
                 ) : (
                   <>
                     <PlusIcon className="mr-2 h-4 w-4" />
