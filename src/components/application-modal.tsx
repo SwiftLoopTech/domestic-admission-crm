@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -99,6 +99,21 @@ export function ApplicationModal() {
       toast.error(`Failed to prepare application data: ${(error as Error).message}`);
     }
   }
+
+  // Reset form when dialog is closed
+  useEffect(() => {
+    if (!open) {
+      form.reset({
+        student_name: "",
+        email: "",
+        phone: "",
+        preferred_college: "",
+        preferred_course: "",
+        notes: "",
+        subagent_id: null,
+      });
+    }
+  }, [open, form]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
