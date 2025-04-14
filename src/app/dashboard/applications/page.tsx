@@ -155,9 +155,11 @@ export default function ApplicationsPage() {
                         }
                       />
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-red-600">
-                        Delete
-                      </DropdownMenuItem>
+                      { !isSubagent && (
+                        <DropdownMenuItem className="text-red-600">
+                          Delete
+                        </DropdownMenuItem>
+                    )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
