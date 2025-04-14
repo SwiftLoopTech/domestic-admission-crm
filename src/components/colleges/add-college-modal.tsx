@@ -38,11 +38,8 @@ const formSchema = z.object({
   website_url: z.string()
     .transform((val) => {
       if (!val) return null;
-      // Remove any leading/trailing whitespace
       val = val.trim();
-      // Return null if empty string
       if (!val) return null;
-      // Add https:// if no protocol is specified
       if (!val.match(/^https?:\/\//i)) {
         return `https://${val}`;
       }
@@ -219,7 +216,6 @@ export function AddCollegeModal(){
                             {...field}
                             value={field.value || ''}
                             onChange={(e) => {
-                              // Remove https:// or http:// when user is typing
                               let value = e.target.value;
                               value = value.replace(/^https?:\/\//i, '');
                               field.onChange(value);
