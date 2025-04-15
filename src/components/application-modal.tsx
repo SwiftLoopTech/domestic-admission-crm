@@ -115,7 +115,7 @@ export function ApplicationModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-zinc-900 text-white hover:cursor-pointer hover:shadow-md">
+        <Button className="bg-[#222B38] text-white hover:cursor-pointer hover:shadow-md">
           <PlusCircle className="mr-2 h-4 w-4" />
           New Application
         </Button>

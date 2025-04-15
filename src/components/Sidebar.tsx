@@ -93,10 +93,10 @@ export function Sidebar({ userRole }: SidebarProps) {
   const userName = "John Doe"; // Replace with actual user name
 
   const sidebarContent = (
-    <div className="flex h-full flex-col bg-teal-50">
+    <div className="flex h-full flex-col border-r border-zinc-400 bg-[#EBF6FA]">
       {/* Header with user info */}
       <div className="p-2">
-        <div className="flex items-center gap-3 bg-zinc-900 p-4 rounded-lg">
+        <div className="flex items-center gap-3 bg-[#222B38] p-4 rounded-lg">
           <Avatar className="h-10 w-10 border-2 border-white/20">
             <AvatarImage src="" alt={userName} />
             <AvatarFallback className="bg-white/90 text-teal-800 font-medium">
@@ -129,7 +129,7 @@ export function Sidebar({ userRole }: SidebarProps) {
                       href={item.href}
                       className={cn(
                         "flex items-center justify-between h-10 px-3 py-2 text-sm rounded-lg transition-all duration-200",
-                        "hover:bg-teal-50 hover:text-teal-700",
+                        "hover:text-black",
                         isActive
                           ? "text-black font-medium"
                           : "text-gray-600"
