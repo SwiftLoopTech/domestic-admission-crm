@@ -67,7 +67,7 @@ export function AddCourseModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white hover:from-teal-600 hover:to-cyan-700">
+        <Button className="bg-[#FFC11F] text-black hover:bg-[#FFC11F]/90">
           <PlusIcon className="mr-2 h-4 w-4" />
           Add Course
         </Button>

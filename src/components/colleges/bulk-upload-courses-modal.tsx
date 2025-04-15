@@ -215,7 +215,7 @@ export function BulkUploadCoursesModal() {
       <DialogTrigger asChild>
         <Button 
           variant="outline"
-          className="bg-teal-50 hover:bg-teal-100 border-teal-200 text-teal-700"
+          className="bg-white hover:bg-amber-500"
         >
           <UploadIcon className="mr-2 h-4 w-4" />
           Bulk Upload Courses

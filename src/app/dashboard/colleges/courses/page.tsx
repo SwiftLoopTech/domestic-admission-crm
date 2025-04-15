@@ -78,14 +78,13 @@ export default function CoursesPage() {
   return (
     <div className="space-y-6">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-teal-500 to-cyan-600 rounded-xl p-6 shadow-lg">
+      <div className="bg-[#222B38] rounded-xl p-6 shadow-lg">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-              <GraduationCapIcon className="h-6 w-6" />
+            <h1 className="text-3xl font-medium text-white flex items-center gap-2">
               Available Courses
             </h1>
-            <p className="text-teal-50">Manage and explore course offerings across universities</p>
+            <p className="text-white/60 text-sm">Manage and explore course offerings across universities</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <AddCourseModal />
@@ -120,15 +119,14 @@ export default function CoursesPage() {
               <Card key={course.id} className="group hover:shadow-lg transition-shadow duration-200 border">
                 <CardHeader className="space-y-3 pb-4">
                   <div className="flex items-start justify-between">
-                    <Badge variant="secondary" className="bg-teal-100 text-teal-700 hover:bg-teal-200">
+                    <Badge variant="secondary" className="bg-amber-100 text-amber-600 hover:bg-amber-300">
                       #{course.slno}
                     </Badge>
-                    <Badge variant="outline" className="border-blue-200 text-blue-700">
+                    <Badge variant="outline" className="border-blue-200 text-zinc-900">
                       {course.duration_years} Years
                     </Badge>
                   </div>
                   <CardTitle className="flex items-center text-xl">
-                    <BookOpenIcon className="h-6 w-6 mr-2 text-teal-600" />
                     {course.course_name}
                   </CardTitle>
                   <div className="space-y-2">
@@ -146,7 +144,7 @@ export default function CoursesPage() {
                 <CardFooter className="pt-4">
                   <Button 
                     onClick={() => setSelectedCourse(course)}
-                    className="w-full bg-teal-500 hover:bg-teal-600 text-white"
+                    className="w-full bg-[#FFC11F] text-black"
                   >
                     <DollarSignIcon className="h-4 w-4 mr-2" />
                     View Complete Details

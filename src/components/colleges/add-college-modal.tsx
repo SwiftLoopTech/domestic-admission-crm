@@ -99,8 +99,8 @@ export function AddCollegeModal(){
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-indigo-600 text-white">
-          <PlusIcon className="mr-2 h-4 w-4" />
+        <Button className="bg-[#FFC11F] text-black">
+          <PlusIcon className="h-4 w-4" />
           Add College
         </Button>
       </DialogTrigger>
