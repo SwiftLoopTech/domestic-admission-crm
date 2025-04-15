@@ -19,6 +19,8 @@ import { useSubagents } from "@/hooks/useSubagents";
 import { useApplications } from "@/hooks/useApplications";
 import { getCurrentUserId } from "@/utils/agents.supabase";
 import { APPLICATION_STATUS } from "@/utils/application-status";
+import { useColleges } from "@/hooks/useColleges";
+import { useCourse, useCourses } from "@/hooks/useCourses";
 
 type College = Database['public']['Tables']['colleges']['Row'];
 
@@ -35,20 +37,6 @@ const applicationSchema = z.object({
 
 type ApplicationFormValues = z.infer<typeof applicationSchema>;
 
-// College and course options
-const colleges = [
-  { id: "1", name: "University of Technology" },
-  { id: "2", name: "National College" },
-  { id: "3", name: "Metropolitan University" },
-];
-
-const courses = [
-  { id: "1", name: "Computer Science" },
-  { id: "2", name: "Business Administration" },
-  { id: "3", name: "Mechanical Engineering" },
-  { id: "4", name: "Medicine" },
-];
-
 
 export function ApplicationModal() {
   const [open, setOpen] = useState(false);
@@ -56,7 +44,15 @@ export function ApplicationModal() {
   const { subagents, isLoading: isLoadingSubagents } = useSubagents();
   const { createApplication, isCreating } = useApplications();
 
-  // Initialize form with react-hook-form
+  const { data: collegesData } = useColleges();
+  const colleges = collegesData?.colleges.map((college) => ({ id: college.id, name: college.name })) || [];
+  const [currentCollege, setCurrentCollege] = useState<any | null>(null);
+  const { data: coursesData } = useCourses();
+  const courses = coursesData?.courses.map((course) => ({ id: course.id, name: course.course_name, collegeID: course.college_id })) || [];
+  console.log(courses);
+  const filteredCourses = courses.filter((course) => {
+    return course.collegeID === currentCollege?.id;
+  })
   const form = useForm<ApplicationFormValues>({
     resolver: zodResolver(applicationSchema),
     defaultValues: {
@@ -113,6 +109,7 @@ export function ApplicationModal() {
         subagent_id: null,
       });
     }
+    setCurrentCollege(null);
   }, [open, form]);
 
   return (
@@ -230,7 +227,13 @@ export function ApplicationModal() {
                   <FormItem>
                     <FormLabel>Preferred College</FormLabel>
                     <Select
-                      onValueChange={field.onChange}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        const selectedCollege = colleges.find((college) => college.id === value);
+                        const data = { id: selectedCollege?.id, name: selectedCollege?.name };
+                        setCurrentCollege(data);
+                        form.setValue("preferred_course", "");
+                      }}
                       value={field.value}
                     >
                       <FormControl>
@@ -268,11 +271,15 @@ export function ApplicationModal() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-white">
-                        {courses.map((course) => (
+                        {currentCollege === null ? (
+                          <p className="text-sm">Select a college first</p>
+                        ) : filteredCourses.length === 0 ? (
+                          <p>No courses available</p>
+                        ) : (filteredCourses.map((course) => (
                           <SelectItem key={course.id} value={course.id}>
                             {course.name}
                           </SelectItem>
-                        ))}
+                        )))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
