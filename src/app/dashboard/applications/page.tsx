@@ -65,8 +65,8 @@ export default function ApplicationsPage() {
 
   return (
     <>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Applications</h1>
+      <div className="flex justify-between items-center mb-14">
+        <h1 className="text-3xl font-medium">Applications</h1>
         <div className="flex gap-4">
           {/* Status filter */}
           <DropdownMenu>
@@ -108,7 +108,7 @@ export default function ApplicationsPage() {
       ) : (
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="text-zinc-600 font-light !border-b-0">
               <TableHead>Student Name</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>College</TableHead>
@@ -120,11 +120,11 @@ export default function ApplicationsPage() {
           </TableHeader>
           <TableBody>
             {filteredApplications.map((application) => (
-              <TableRow key={application.id}>
+              <TableRow key={application.id} className="border-b-0">
                 <TableCell className="font-medium">{application.student_name}</TableCell>
-                <TableCell>{application.phone}</TableCell>
-                <TableCell>{application.preferred_college}</TableCell>
-                <TableCell>{application.preferred_course}</TableCell>
+                <TableCell className="text-zinc-800">{application.phone}</TableCell>
+                <TableCell className="text-zinc-800">{application.preferred_college}</TableCell>
+                <TableCell className="text-zinc-800">{application.preferred_course}</TableCell>
                 <TableCell className="min-w-[200px] text-black">
                   <ApplicationStatusDropdown
                     applicationId={application.id}
@@ -132,7 +132,7 @@ export default function ApplicationsPage() {
                   />
                 </TableCell>
                 {!isSubagent && (
-                  <TableCell>
+                  <TableCell className="text-zinc-800">
                     {getSubagentName(application.subagent_id)}
                   </TableCell>
                 )}
