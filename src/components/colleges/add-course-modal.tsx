@@ -73,7 +73,7 @@ export function AddCourseModal() {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] p-0 bg-white border-none">
-        <DialogHeader className="bg-gradient-to-r from-teal-500 to-cyan-600 p-6 rounded-t-lg">
+        <DialogHeader className="bg-[#222B38] p-6 rounded-t-lg">
           <DialogTitle className="text-white flex items-center gap-2">
             <BookOpenIcon className="h-5 w-5" />
             Add New Course
@@ -310,7 +310,7 @@ export function AddCourseModal() {
               <Button 
                 type="submit"
                 disabled={addCourseMutation.isPending}
-                className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white hover:from-teal-600 hover:to-cyan-700"
+                className="bg-[#FFC11F] text-black hover:bg-[#FFC11F]/90"
               >
                 {addCourseMutation.isPending ? (
                   <>
