@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import loginbg from "@/assets/loginbg.jpeg";
+import { Loader2, AlertCircle } from "lucide-react";
 
 export function LoginForm({
   className,
@@ -21,20 +22,29 @@ export function LoginForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      setError(error.message);
-    } else {
+      if (error) {
+        setError("Invalid credentials");
+        return;
+      }
+
       window.location.href = "/dashboard";
+    } catch (err) {
+      setError("An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -59,19 +69,47 @@ export function LoginForm({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  disabled={isLoading}
+                  className={cn(
+                    error && "border-red-500 focus-visible:ring-red-200"
+                  )}
                 />
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
                   <Label htmlFor="password">Password*</Label>
                 </div>
-                <Input type="password"
+                <Input 
+                  id="password"
+                  type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  required />
+                  required
+                  disabled={isLoading}
+                  className={cn(
+                    error && "border-red-500 focus-visible:ring-red-200"
+                  )}
+                />
+                {error && (
+                  <div className="flex items-center gap-2 text-sm text-red-500">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>{error}</span>
+                  </div>
+                )}
               </div>
-              <Button type="submit" onClick={handleLogin} className="w-full bg-zinc-800 text-white cursor-pointer">
-                Login
+              <Button 
+                type="submit" 
+                className="w-full bg-zinc-800 text-white cursor-pointer"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  'Login'
+                )}
               </Button>
             </div>
           </form>
