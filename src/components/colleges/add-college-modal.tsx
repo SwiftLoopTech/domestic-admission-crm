@@ -126,7 +126,7 @@ export function AddCollegeModal(){
                   Institution Details
                 </h3>
 
-                <div className="space-y-4">
+                <div className="space-y-4 w-full flex items-start gap-4 flex-col sm:flex-row">
                   <FormField
                     control={form.control}
                     name="name"

@@ -42,6 +42,7 @@ export default function DashboardPage() {
         <div>
           <p className="mb-9">Welcome to your agent dashboard.</p>
           {/* Agent-specific content */}
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <Card>
               <CardHeader className="pb-2">
