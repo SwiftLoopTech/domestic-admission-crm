@@ -6,6 +6,8 @@ import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApplicationModal } from "@/components/application-modal";
 import { useAgentData } from "@/hooks/useAgentData";
+import { SelectContent, SelectTrigger, Select, SelectItem, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 export default function DashboardPage() {
   const { userRole, isLoading: isLoadingRole, error: roleError } = useUserRole();
@@ -42,7 +44,55 @@ export default function DashboardPage() {
         <div>
           <p className="mb-9">Welcome to your agent dashboard.</p>
           {/* Agent-specific content */}
-          
+          <div className="flex gap-4 mb-6">
+            <Select>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a college" />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                <SelectItem value="college1">College 1</SelectItem>
+                <SelectItem value="college2">College 2</SelectItem>
+                <SelectItem value="college3">College 3</SelectItem>
+                <SelectItem value="college4">College 4</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select>
+              <SelectTrigger>
+                <SelectValue placeholder="Sub Agent" />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                <SelectItem value="college1">College 1</SelectItem>
+                <SelectItem value="college2">College 2</SelectItem>
+                <SelectItem value="college3">College 3</SelectItem>
+                <SelectItem value="college4">College 4</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Year" />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                <SelectItem value="college1">Year 1</SelectItem>
+                <SelectItem value="college2">Year 2</SelectItem>
+                <SelectItem value="college3">Year 3</SelectItem>
+                <SelectItem value="college4">Year 4</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Location" />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                <SelectItem value="college1">Kochi</SelectItem>
+                <SelectItem value="college2">Trivandrum</SelectItem>
+                <SelectItem value="college3">Kollam</SelectItem>
+                <SelectItem value="college4">Calicut</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button className="bg-[#FFC11F] hover:bg-[#FFC11F] text-black font-medium rounded-md px-6 py-4">
+              Apply Filter
+            </Button>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <Card>
               <CardHeader className="pb-2">
