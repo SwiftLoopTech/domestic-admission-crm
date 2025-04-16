@@ -118,8 +118,8 @@ export function AddCollegeModal(){
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-[#FFC11F] text-black">
-          <PlusIcon className="h-4 w-4" />
+        <Button className="bg-indigo-600 text-white">
+          <PlusIcon className="mr-2 h-4 w-4" />
           Add College
         </Button>
       </DialogTrigger>
@@ -151,7 +151,7 @@ export function AddCollegeModal(){
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>College Name*</FormLabel>
+                        <FormLabel>College Name</FormLabel>
                         <FormControl>
                           <Input placeholder="Enter college name" {...field} />
                         </FormControl>
@@ -165,7 +165,7 @@ export function AddCollegeModal(){
                     name="location"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Location*</FormLabel>
+                        <FormLabel>Location</FormLabel>
                         <FormControl>
                           <Input placeholder="City, State" {...field} />
                         </FormControl>

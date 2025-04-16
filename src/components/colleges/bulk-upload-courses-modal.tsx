@@ -215,14 +215,14 @@ export function BulkUploadCoursesModal() {
       <DialogTrigger asChild>
         <Button 
           variant="outline"
-          className="bg-white hover:bg-amber-500"
+          className="bg-teal-50 hover:bg-teal-100 border-teal-200 text-teal-700"
         >
           <UploadIcon className="mr-2 h-4 w-4" />
           Bulk Upload Courses
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[550px] bg-white p-0 gap-0 border-none">
-        <DialogHeader className="bg-[#222B38] p-6 rounded-t-lg">
+        <DialogHeader className="bg-gradient-to-r from-teal-500 to-cyan-600 p-6 rounded-t-lg">
           <DialogTitle className="text-white flex items-center gap-2">
             <FileText className="h-5 w-5" />
             Bulk Upload Courses
@@ -359,7 +359,7 @@ export function BulkUploadCoursesModal() {
             type="button" 
             onClick={handleSubmit}
             disabled={parsedData.length === 0 || isProcessing || bulkAddMutation.isPending}
-            className="bg-[#FFC11F] hover:bg-[#FFC11F] text-black border-[#FFC11F]"
+            className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white hover:from-teal-600 hover:to-cyan-700"
           >
             {isProcessing || bulkAddMutation.isPending ? (
               <>
