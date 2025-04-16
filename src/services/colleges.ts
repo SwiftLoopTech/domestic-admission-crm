@@ -1,6 +1,12 @@
 
 import { supabase } from "@/utils/supabase";
-import { College, CollegeWithCourses, CreateCollegeInput, UpdateCollegeInput } from "@/types/colleges";
+import { Database } from "@/types/supabase";
+
+type College = Database['public']['Tables']['colleges']['Row'];
+
+type CreateCollegeInput = Database['public']['Tables']['colleges']['Insert'];
+
+export interface UpdateCollegeInput extends Partial<CreateCollegeInput> {}
 
 export interface CollegeFilters {
   location?: string;
@@ -14,7 +20,7 @@ export const collegeService = {
    * Create a new college
    */
   async createCollege(brochureFile:File|null,input: CreateCollegeInput): Promise<College> {
-
+    
     const { data, error } = await supabase
       .from('colleges')
       .insert([input])
@@ -34,7 +40,7 @@ export const collegeService = {
   /**
    * Get a single college by ID
    */
-  async getCollege(id: string): Promise<CollegeWithCourses | null> {
+  async getCollege(id: string): Promise<College | null> {
     const { data, error } = await supabase
       .from('colleges')
       .select(`

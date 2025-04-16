@@ -8,7 +8,6 @@ const config: Config = {
   content: [
     './src/**/*.{js,ts,jsx,tsx}',
     './src/components/ui/*.tsx',
-    './src/styles/globals.css',
     './node_modules/@tremor/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {

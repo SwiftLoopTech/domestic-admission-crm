@@ -23,7 +23,6 @@ export function useSubagents() {
     mutationFn: (data: SubagentInput) => createSubagent(data),
     onSuccess: (newSubagent) => {
       // Optimistically update the cache
-      //@ts-ignore
       queryClient.setQueryData(["subagents"], (oldData: any) => {
         return [...(oldData || []), newSubagent];
       });

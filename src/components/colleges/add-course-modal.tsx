@@ -144,13 +144,13 @@ export function AddCourseModal() {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button className="bg-[#FFC11F] text-black hover:bg-[#FFC11F]/90">
+        <Button className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white hover:from-teal-600 hover:to-cyan-700">
           <PlusIcon className="mr-2 h-4 w-4" />
           Add Course
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] p-0 bg-white border-none">
-        <DialogHeader className="bg-[#222B38] p-6 rounded-t-lg">
+        <DialogHeader className="bg-gradient-to-r from-teal-500 to-cyan-600 p-6 rounded-t-lg">
           <DialogTitle className="text-white flex items-center gap-2">
             <BookOpenIcon className="h-5 w-5" />
             Add New Course
@@ -169,7 +169,7 @@ export function AddCourseModal() {
                 name="slno"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Serial Number*</FormLabel>
+                    <FormLabel>Serial Number</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="Enter serial number" />
                     </FormControl>
@@ -183,7 +183,7 @@ export function AddCourseModal() {
                 name="college_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>College*</FormLabel>
+                    <FormLabel>College</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -208,7 +208,7 @@ export function AddCourseModal() {
                 name="course_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Course Name*</FormLabel>
+                    <FormLabel>Course Name</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="Enter course name" />
                     </FormControl>
@@ -227,25 +227,20 @@ export function AddCourseModal() {
                 name="fees.total"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Total Fee*</FormLabel>
+                    <FormLabel>Total Fee (Calculated automatically)</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="number" 
-                        {...field} 
-                        onFocus={e => {
-                          if (e.target.value === "0") {
-                            e.target.value = ""
-                            field.onChange("")
-                          }
-                        }}
-                        onChange={e => field.onChange(Number(e.target.value))}
-                        placeholder="Enter total fee" 
+                      <Input
+                        type="number"
+                        {...field}
+                        disabled
+                        className="bg-gray-50"
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
               <div className="grid grid-cols-2 gap-4">
                 {/* Dynamically render year fee fields based on visibleYears */}
                 {Array.from({ length: visibleYears }).map((_, index) => {
@@ -325,16 +320,16 @@ export function AddCourseModal() {
                 name="hostel_food_fee"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Hostel & Food Fee (per year)*</FormLabel>
+                    <FormLabel>Hostel & Food Fee (per year)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         {...field}
                         value={field.value === 0 ? '' : field.value}
-                        onFocus={e => {
-                          if (e.target.value === "0") {
-                            e.target.value = ""
-                            field.onChange("")
+                        onFocus={(e) => {
+                          // Clear the field when it gets focus if the value is 0
+                          if (field.value === 0) {
+                            e.target.value = '';
                           }
                         }}
                         onChange={(e) => {
@@ -363,7 +358,7 @@ export function AddCourseModal() {
               <Button
                 type="submit"
                 disabled={addCourseMutation.isPending}
-                className="bg-[#FFC11F] text-black hover:bg-[#FFC11F]/90"
+                className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white hover:from-teal-600 hover:to-cyan-700"
               >
                 {addCourseMutation.isPending ? (
                   <>

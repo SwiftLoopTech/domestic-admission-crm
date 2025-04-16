@@ -58,7 +58,7 @@ export function DeleteConfirmationDialog({
         <AlertDialogFooter className="gap-2 sm:gap-0">
           <AlertDialogCancel
             disabled={isPending}
-            className="border-gray-200 hover:bg-gray-100 mr-2"
+            className="border-gray-200 hover:bg-gray-100"
           >
             Cancel
           </AlertDialogCancel>
