@@ -12,12 +12,14 @@ interface NotesEditorProps {
   applicationId: string;
   initialNotes: string | null;
   onNotesUpdated?: () => void;
+  isReadOnly?: boolean;
 }
 
 export function NotesEditor({
   applicationId,
   initialNotes,
-  onNotesUpdated
+  onNotesUpdated,
+  isReadOnly = false
 }: NotesEditorProps) {
   const [notes, setNotes] = useState(initialNotes || "");
   const [isEditing, setIsEditing] = useState(false);
@@ -74,7 +76,7 @@ export function NotesEditor({
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
           <CardTitle>Notes</CardTitle>
-          {!isEditing ? (
+          {!isEditing && !isReadOnly ? (
             <Button
               variant="ghost"
               size="sm"

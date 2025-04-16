@@ -7,7 +7,7 @@ import { ReactNode } from 'react';
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const auth = useAuth();
   const user = auth?.user;
-  const loading = auth?.loading;
+  const loading = false;
   const router = useRouter();
 
   useEffect(() => {

@@ -28,6 +28,8 @@ import { MoreHorizontal } from "lucide-react";
 import { ApplicationModal } from "@/components/application-modal";
 import { ApplicationDetailsDialog } from "@/components/application-details-dialog";
 import { ApplicationStatusDropdown } from "@/components/application-status-dropdown";
+import { DocumentUploadModal } from "@/components/document-upload-modal";
+import { APPLICATION_STATUS } from "@/utils/application-status";
 
 export default function ApplicationsPage() {
   const { applications, isLoading: isLoadingApplications, error: applicationsError } = useApplications();
@@ -137,31 +139,55 @@ export default function ApplicationsPage() {
                   </TableCell>
                 )}
                 <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Open menu</span>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <ApplicationDetailsDialog
-                        application={application}
-                        trigger={
-                          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                            View details
-                          </DropdownMenuItem>
-                        }
+                  <div className="flex items-center justify-end gap-2">
+                    {/* Show upload documents button for verified applications */}
+                    {application.application_status === APPLICATION_STATUS.VERIFIED &&
+                     (userRole === "agent" || userRole === "sub-agent") && (
+                      <DocumentUploadModal
+                        applicationId={application.id}
+                        applicationStatus={application.application_status}
                       />
-                      <DropdownMenuSeparator />
-                      { !isSubagent && (
+
+                    )}
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Open menu</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <ApplicationDetailsDialog
+                          application={application}
+                          trigger={
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                              View details
+                            </DropdownMenuItem>
+                          }
+                        />
+                        {application.application_status === APPLICATION_STATUS.VERIFIED &&
+                         (userRole === "agent" || userRole === "sub-agent") && (
+                          <DocumentUploadModal
+                            applicationId={application.id}
+                            applicationStatus={application.application_status}
+                            trigger={
+                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                Upload documents
+                              </DropdownMenuItem>
+                            }
+                          />
+                        )}
+                        <DropdownMenuSeparator />
+                        { !isSubagent && (
                         <DropdownMenuItem className="text-red-600">
                           Delete
                         </DropdownMenuItem>
                     )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
