@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { CollegeCard } from "@/components/colleges/college-card"
 import { useUserRole } from "@/hooks/useUserRole"
+import { Skeleton } from "@/components/ui/skeleton";
 
 type College = Database['public']['Tables']['colleges']['Row'];
 
@@ -90,7 +91,13 @@ export default function CollegesPage() {
 
       {/* Colleges Grid */}
       {isLoading ? (
-        <div>@noel: add a skeleton here</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((index) => (
+            <div key={index} className="flex items-center justify-center">
+              <Skeleton className="w-full h-72 rounded-lg bg-zinc-400" />
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {data?.colleges.map((college) => (

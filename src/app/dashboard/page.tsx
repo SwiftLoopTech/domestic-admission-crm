@@ -283,19 +283,12 @@ export default function DashboardPage() {
 function DashboardSkeleton() {
   return (
     <>
-      <Skeleton className="h-8 w-64 mb-4" />
+      <Skeleton className="h-8 w-64 mb-2 bg-zinc-400" />
       <Skeleton className="h-5 w-full max-w-md mb-4" />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {[1, 2, 3].map((i) => (
-          <Card key={i}>
-            <CardHeader className="pb-2">
-              <Skeleton className="h-4 w-32" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-8 w-16" />
-            </CardContent>
-          </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <Skeleton key={i} className="h-28 w-2xs bg-zinc-400" />
         ))}
       </div>
     </>

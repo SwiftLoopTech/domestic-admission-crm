@@ -97,7 +97,7 @@ export function CollegeCard({ college, onDelete }: CollegeCardProps) {
           <Button
             variant="outline"
             size="sm"
-            className="text-white bg-black hover:text-indigo-700 hover:bg-teal-50"
+            className="bg-[#FFC11F] text-black border-none hover:bg-amber-300 hover:text-black py-5"
             asChild
           >
             <Link href={`/dashboard/colleges/${college.id}`}>
