@@ -327,10 +327,10 @@ export default function CollegeDetailsPage() {
                             <p className="text-xs text-gray-500">Duration</p>
                             <p className="font-medium">{course.duration_years} Years</p>
                           </div>
-                          <div>
+                          {/* <div>
                             <p className="text-xs text-gray-500">Serial Number</p>
                             <p className="font-medium">#{course.slno || 'N/A'}</p>
-                          </div>
+                          </div> */}
                         </div>
                       </div>
                     </div>

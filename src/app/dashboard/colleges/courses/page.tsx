@@ -65,9 +65,9 @@ export default function CoursesPage() {
     return collegesData?.colleges.find(college => college.id === collegeId)
   }
 
-  const formatCurrency = (amount: string) => {
-    return `₹${parseInt(amount).toLocaleString('en-IN')}`
-  }
+  const formatCurrency = (amount: number) => {
+      return `₹${amount.toLocaleString('en-IN')}`
+    }
 
   if (isError) {
     return (
@@ -257,7 +257,7 @@ export default function CoursesPage() {
                       <span className="text-orange-700 font-medium">Hostel & Food (per year)</span>
                     </div>
                     <span className="text-xl font-bold text-orange-700">
-                      {formatCurrency((selectedCourse.hostel_food_fee || 0).toString())}
+                      {formatCurrency(selectedCourse.hostel_food_fee || 0)}
                     </span>
                   </div>
                 </div>
