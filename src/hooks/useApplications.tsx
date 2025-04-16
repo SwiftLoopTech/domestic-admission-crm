@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getApplications, createApplication, updateApplicationStatus } from "@/services/applications";
+import { getApplications, createApplication, updateApplicationStatus, updateApplication } from "@/services/applications";
 import { toast } from "sonner";
 import { isValidStatusTransition } from "@/utils/application-status";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -15,6 +15,16 @@ interface ApplicationInput {
   application_status: string;
   notes?: string;
   subagent_id?: string | null;
+}
+
+interface ApplicationUpdateInput {
+  student_name?: string;
+  email?: string;
+  phone?: string;
+  preferred_college?: string;
+  preferred_course?: string;
+  notes?: string;
+  document_links?: string[];
 }
 
 export function useApplications() {
@@ -105,6 +115,32 @@ export function useApplications() {
     },
   });
 
+  // Mutation for updating application details
+  const { mutate: updateApplicationMutation, isPending: isUpdatingApplication } = useMutation({
+    mutationFn: ({ applicationId, data }: { applicationId: string, data: ApplicationUpdateInput }) => {
+      const isAgent = userRole === "agent";
+      return updateApplication(applicationId, data, isAgent);
+    },
+    onSuccess: (updatedApplication) => {
+      // Optimistically update the cache
+      queryClient.setQueryData(["applications"], (oldData: any) => {
+        return oldData.map((app: any) =>
+          app.id === updatedApplication.id ? updatedApplication : app
+        );
+      });
+
+      // Invalidate and refetch to ensure data consistency
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+
+      // Show success message
+      toast.success("Application details updated successfully");
+    },
+    onError: (error: Error) => {
+      // Show error message
+      toast.error(`Failed to update application details: ${error.message}`);
+    },
+  });
+
   return {
     applications,
     isLoading,
@@ -114,5 +150,7 @@ export function useApplications() {
     isCreating,
     updateStatus: updateStatusMutation,
     isUpdatingStatus,
+    updateApplication: updateApplicationMutation,
+    isUpdatingApplication,
   };
 }
