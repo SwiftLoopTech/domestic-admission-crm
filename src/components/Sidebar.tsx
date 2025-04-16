@@ -93,7 +93,7 @@ export function Sidebar({ userRole }: SidebarProps) {
   const userName = "John Doe"; // Replace with actual user name
 
   const sidebarContent = (
-    <div className="flex h-full flex-col border-r border-zinc-400 bg-[#EBF6FA]">
+    <div className="flex h-full flex-col border-r border-zinc-400 bg-[#EBF6FA] fixed w-72">
       {/* Header with user info */}
       <div className="p-2">
         <div className="flex items-center gap-3 bg-[#222B38] p-4 rounded-lg">

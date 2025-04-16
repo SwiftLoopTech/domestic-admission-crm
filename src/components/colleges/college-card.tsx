@@ -37,7 +37,7 @@ export function CollegeCard({ college, onDelete }: CollegeCardProps) {
 
   return (
     <>
-      <Card className="group hover:shadow-lg transition-shadow duration-200">
+      <Card className="group hover:shadow-lg transition-shadow duration-200 border-zinc-400">
         <CardHeader className="space-y-3">
           <div className="flex items-start justify-between">
             <Badge variant="outline" className="bg-teal-50 text-black hover:bg-teal-100">
@@ -45,7 +45,6 @@ export function CollegeCard({ college, onDelete }: CollegeCardProps) {
             </Badge>
           </div>
           <CardTitle className="text-xl flex items-center">
-            <BuildingIcon className="h-6 w-6 mr-2 text-black" />
             {college.name}
           </CardTitle>
           <CardDescription className="flex items-center text-base">
