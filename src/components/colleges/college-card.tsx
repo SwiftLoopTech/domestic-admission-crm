@@ -11,16 +11,17 @@ import {
   CardFooter
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { 
-  ExternalLinkIcon, 
-  FileIcon, 
-  MapPinIcon, 
+import {
+  ExternalLinkIcon,
+  FileIcon,
+  MapPinIcon,
   BuildingIcon,
   TrashIcon
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog"
+import { useUserRole } from "@/hooks/useUserRole"
 
 type College = Database['public']['Tables']['colleges']['Row']
 
@@ -31,6 +32,8 @@ interface CollegeCardProps {
 
 export function CollegeCard({ college, onDelete }: CollegeCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const { userRole } = useUserRole()
+  const isAgent = userRole === "agent"
 
   return (
     <>
@@ -54,9 +57,9 @@ export function CollegeCard({ college, onDelete }: CollegeCardProps) {
         <CardContent className="space-y-4">
           <div className="flex items-center text-sm text-gray-600">
             <ExternalLinkIcon className="h-4 w-4 mr-2" />
-            <a 
-              href={college.website_url || '#'} 
-              target="_blank" 
+            <a
+              href={college.website_url || '#'}
+              target="_blank"
               rel="noopener noreferrer"
               className="hover:text-teal-600 truncate"
             >
@@ -67,9 +70,9 @@ export function CollegeCard({ college, onDelete }: CollegeCardProps) {
           {college.brochure_url && (
             <div className="flex items-center text-sm text-gray-600">
               <FileIcon className="h-4 w-4 mr-2" />
-              <a 
-                href={college.brochure_url} 
-                target="_blank" 
+              <a
+                href={college.brochure_url}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-teal-600"
               >
@@ -80,16 +83,18 @@ export function CollegeCard({ college, onDelete }: CollegeCardProps) {
         </CardContent>
 
         <CardFooter className="flex justify-between pt-4">
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-            onClick={() => setShowDeleteDialog(true)}
-          >
-            <TrashIcon className="h-4 w-4 mr-2" />
-            Delete
-          </Button>
-          <Button 
+          {isAgent && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={() => setShowDeleteDialog(true)}
+            >
+              <TrashIcon className="h-4 w-4 mr-2" />
+              Delete
+            </Button>
+          )}
+          <Button
             variant="outline"
             size="sm"
             className="text-white bg-black hover:text-indigo-700 hover:bg-teal-50"

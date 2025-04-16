@@ -14,18 +14,19 @@ import {
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { AddCollegeModal } from "@/components/colleges/add-college-modal"
-import { 
-  ExternalLinkIcon, 
-  FileIcon, 
-  MapPinIcon, 
+import {
+  ExternalLinkIcon,
+  FileIcon,
+  MapPinIcon,
   BookOpenIcon,
   BuildingIcon,
-  SearchIcon 
+  SearchIcon
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { CollegeCard } from "@/components/colleges/college-card"
+import { useUserRole } from "@/hooks/useUserRole"
 
 type College = Database['public']['Tables']['colleges']['Row'];
 
@@ -33,6 +34,8 @@ export default function CollegesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const { data, isLoading } = useColleges({ searchTerm });
   const deleteCollegeMutation = useDeleteCollege();
+  const { userRole } = useUserRole();
+  const isAgent = userRole === "agent";
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -58,16 +61,18 @@ export default function CollegesPage() {
             <p className="text-white/60 text-sm">Manage and explore partner institutions</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
-            <AddCollegeModal />
-            <Link href="/dashboard/colleges/courses">
-              <Button 
-                variant="outline" 
-                className="bg-white text-black w-full sm:w-auto"
-              >
-                <BookOpenIcon className="mr-2 h-4 w-4" />
-                Manage Courses
-              </Button>
-            </Link>
+            {isAgent && <AddCollegeModal />}
+            {isAgent && (
+              <Link href="/dashboard/colleges/courses">
+                <Button
+                  variant="outline"
+                  className="bg-white text-black w-full sm:w-auto"
+                >
+                  <BookOpenIcon className="mr-2 h-4 w-4" />
+                  Manage Courses
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </div>

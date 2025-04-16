@@ -68,6 +68,11 @@ export function Sidebar({ userRole }: SidebarProps) {
         href: "/dashboard/applications",
         icon: LucideFolderOpen,
         badge: "New"
+      },
+      {
+        name: "Colleges",
+        href: "/dashboard/colleges",
+        icon: LucideUniversity
       }
     ];
 
@@ -77,11 +82,6 @@ export function Sidebar({ userRole }: SidebarProps) {
         name: "Sub-Agents",
         href: "/dashboard/sub-agents",
         icon: LucideUserPlus
-      },
-      {
-        name: "Colleges",
-        href: "/dashboard/colleges",
-        icon: LucideUniversity
       }
     ];
 
