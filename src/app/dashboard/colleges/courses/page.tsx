@@ -1,10 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Database } from "@/types/supabase"
-import { 
-  Card, 
-  CardHeader, 
+import {
+  Card,
+  CardHeader,
   CardTitle,
   CardDescription,
   CardFooter
@@ -18,10 +17,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { 
-  BookOpenIcon, 
-  BuildingIcon, 
-  MapPinIcon, 
+import {
+  BookOpenIcon,
+  BuildingIcon,
+  MapPinIcon,
   DollarSignIcon,
   SearchIcon,
   GraduationCapIcon,
@@ -32,19 +31,22 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { useCourses } from "@/hooks/useCourses"
 import { useColleges } from "@/hooks/useColleges"
+import { useUserRole } from "@/hooks/useUserRole"
+import { College, CourseWithTypedFees } from "@/types/colleges"
 
-type Course = Database['public']['Tables']['courses']['Row']
-type College = Database['public']['Tables']['colleges']['Row']
+
 
 export default function CoursesPage() {
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
-  
+  const [selectedCourse, setSelectedCourse] = useState<CourseWithTypedFees | null>(null)
+  const { userRole } = useUserRole()
+  const isAgent = userRole === "agent"
+
   // Get both courses and colleges data
-  const { 
-    data: coursesData, 
-    isLoading: isLoadingCourses, 
-    isError: isErrorCourses 
+  const {
+    data: coursesData,
+    isLoading: isLoadingCourses,
+    isError: isErrorCourses
   } = useCourses({
     searchTerm: searchTerm,
     limit: 50
@@ -63,9 +65,9 @@ export default function CoursesPage() {
     return collegesData?.colleges.find(college => college.id === collegeId)
   }
 
-  const formatCurrency = (amount: string) => {
-    return `₹${parseInt(amount).toLocaleString('en-IN')}`
-  }
+  const formatCurrency = (amount: number) => {
+      return `₹${amount.toLocaleString('en-IN')}`
+    }
 
   if (isError) {
     return (
@@ -78,22 +80,21 @@ export default function CoursesPage() {
   return (
     <div className="space-y-6">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-teal-500 to-cyan-600 rounded-xl p-6 shadow-lg">
+      <div className="bg-[#222B38] rounded-xl p-6 shadow-lg">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-              <GraduationCapIcon className="h-6 w-6" />
+            <h1 className="text-3xl font-medium text-white flex items-center gap-2">
               Available Courses
             </h1>
-            <p className="text-teal-50">Manage and explore course offerings across universities</p>
+            <p className="text-white/60 text-sm">Manage and explore course offerings across universities</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
-            <AddCourseModal />
-            <BulkUploadCoursesModal />
+            {isAgent && <AddCourseModal />}
+            {isAgent && <BulkUploadCoursesModal />}
           </div>
         </div>
       </div>
-      
+
       {/* Search Section */}
       <div className="relative max-w-2xl mx-auto">
         <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -120,15 +121,14 @@ export default function CoursesPage() {
               <Card key={course.id} className="group hover:shadow-lg transition-shadow duration-200 border">
                 <CardHeader className="space-y-3 pb-4">
                   <div className="flex items-start justify-between">
-                    <Badge variant="secondary" className="bg-teal-100 text-teal-700 hover:bg-teal-200">
+                    <Badge variant="secondary" className="bg-amber-100 text-amber-600 hover:bg-amber-300">
                       #{course.slno}
                     </Badge>
-                    <Badge variant="outline" className="border-blue-200 text-blue-700">
+                    <Badge variant="outline" className="border-blue-200 text-zinc-900">
                       {course.duration_years} Years
                     </Badge>
                   </div>
                   <CardTitle className="flex items-center text-xl">
-                    <BookOpenIcon className="h-6 w-6 mr-2 text-teal-600" />
                     {course.course_name}
                   </CardTitle>
                   <div className="space-y-2">
@@ -142,11 +142,11 @@ export default function CoursesPage() {
                     </CardDescription>
                   </div>
                 </CardHeader>
-                
+
                 <CardFooter className="pt-4">
-                  <Button 
+                  <Button
                     onClick={() => setSelectedCourse(course)}
-                    className="w-full bg-teal-500 hover:bg-teal-600 text-white"
+                    className="w-full bg-[#FFC11F] text-black"
                   >
                     <DollarSignIcon className="h-4 w-4 mr-2" />
                     View Complete Details
@@ -191,7 +191,13 @@ export default function CoursesPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-teal-700 font-medium">Total Course Fee</span>
                     <span className="text-2xl font-bold text-teal-700">
-                      {formatCurrency(((selectedCourse.fees as { total: number })?.total || 0).toString())}
+                      {formatCurrency(
+                        ((selectedCourse.fees as { firstYear: number })?.firstYear || 0) +
+                        ((selectedCourse.fees as { secondYear: number })?.secondYear || 0) +
+                        ((selectedCourse.fees as { thirdYear: number })?.thirdYear || 0) +
+                        ((selectedCourse.fees as { fourthYear: number })?.fourthYear || 0) +
+                        ((selectedCourse.fees as { fifthYear: number })?.fifthYear || 0)
+                      )}
                     </span>
                   </div>
                 </div>
@@ -200,30 +206,46 @@ export default function CoursesPage() {
                 <div>
                   <h3 className="text-lg font-medium mb-3">Year-wise Fee Structure</h3>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <p className="text-gray-600">First Year</p>
-                      <p className="text-lg font-semibold">
-                        {formatCurrency(((selectedCourse.fees as { firstYear: number })?.firstYear || 0).toString())}
-                      </p>
-                    </div>
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <p className="text-gray-600">Second Year</p>
-                      <p className="text-lg font-semibold">
-                        {formatCurrency(((selectedCourse.fees as { secondYear: number })?.secondYear || 0).toString())}
-                      </p>
-                    </div>
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <p className="text-gray-600">Third Year</p>
-                      <p className="text-lg font-semibold">
-                        {formatCurrency(((selectedCourse.fees as { thirdYear: number })?.thirdYear || 0).toString())}
-                      </p>
-                    </div>
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <p className="text-gray-600">Fourth Year</p>
-                      <p className="text-lg font-semibold">
-                        {formatCurrency(((selectedCourse.fees as { fourthYear: number })?.fourthYear || 0).toString())}
-                      </p>
-                    </div>
+                    {((selectedCourse.fees as { firstYear: number })?.firstYear || 0) > 0 && (
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <p className="text-gray-600">First Year</p>
+                        <p className="text-lg font-semibold">
+                          {formatCurrency(((selectedCourse.fees as { firstYear: number })?.firstYear || 0))}
+                        </p>
+                      </div>
+                    )}
+                    {((selectedCourse.fees as { secondYear: number })?.secondYear || 0) > 0 && (
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <p className="text-gray-600">Second Year</p>
+                        <p className="text-lg font-semibold">
+                          {formatCurrency(((selectedCourse.fees as { secondYear: number })?.secondYear || 0))}
+                        </p>
+                      </div>
+                    )}
+                    {((selectedCourse.fees as { thirdYear: number })?.thirdYear || 0) > 0 && (
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <p className="text-gray-600">Third Year</p>
+                        <p className="text-lg font-semibold">
+                          {formatCurrency(((selectedCourse.fees as { thirdYear: number })?.thirdYear || 0))}
+                        </p>
+                      </div>
+                    )}
+                    {((selectedCourse.fees as { fourthYear: number })?.fourthYear || 0) > 0 && (
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <p className="text-gray-600">Fourth Year</p>
+                        <p className="text-lg font-semibold">
+                          {formatCurrency(((selectedCourse.fees as { fourthYear: number })?.fourthYear || 0))}
+                        </p>
+                      </div>
+                    )}
+                    {((selectedCourse.fees as { fifthYear: number })?.fifthYear || 0) > 0 && (
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <p className="text-gray-600">Fifth Year</p>
+                        <p className="text-lg font-semibold">
+                          {formatCurrency(((selectedCourse.fees as { fifthYear: number })?.fifthYear || 0))}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -235,7 +257,7 @@ export default function CoursesPage() {
                       <span className="text-orange-700 font-medium">Hostel & Food (per year)</span>
                     </div>
                     <span className="text-xl font-bold text-orange-700">
-                      {formatCurrency((selectedCourse.hostel_food_fee || 0).toString())}
+                      {formatCurrency(selectedCourse.hostel_food_fee || 0)}
                     </span>
                   </div>
                 </div>

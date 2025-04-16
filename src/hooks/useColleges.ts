@@ -1,10 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { collegeService } from '@/services/colleges';
-import { Database } from '@/types/supabase';
 import { toast } from 'sonner';
-
-type College = Database['public']['Tables']['colleges']['Row'];
-type CreateCollegeInput = Database['public']['Tables']['colleges']['Insert'];
+import { College, CollegeWithCourses, CreateCollegeInput, UpdateCollegeInput } from '@/types/colleges';
 
 export const useColleges = (filters?: {
   searchTerm?: string;
@@ -100,10 +97,10 @@ export const useDeleteCollege = () => {
 };
 
 export const useCollege = (id: string) => {
-  return useQuery({
+  return useQuery<CollegeWithCourses, Error>({
     queryKey: ['college', id],
     queryFn: async () => {
-      return await collegeService.getCollege(id);
+      return await collegeService.getCollege(id) as CollegeWithCourses;
     },
     enabled: !!id,
   });

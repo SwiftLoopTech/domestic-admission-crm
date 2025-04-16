@@ -24,7 +24,7 @@ async function fetchUserRole(): Promise<UserRole> {
   try {
     // Use the getUserRole function from agents.supabase.ts
     const { role } = await getUserRole();
-    return role;
+    return role as UserRole;
   } catch (error) {
     console.error("Error fetching user role:", error);
     throw error;
