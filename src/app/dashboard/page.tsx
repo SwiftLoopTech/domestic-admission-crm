@@ -43,7 +43,7 @@ export default function DashboardPage() {
 
       {userRole === "agent" ? (
         <div>
-          <p className="mb-9">Welcome to your agent dashboard.</p>
+          <p className="mb-9 ">Welcome to your agent dashboard.</p>
           {/* Agent-specific content */}
           <div className="flex gap-4 mb-6">
             <Select>
