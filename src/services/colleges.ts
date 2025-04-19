@@ -72,10 +72,11 @@ export const collegeService = {
     }
 
     if (filters?.searchTerm) {
-      query = query.or(`
-        name.ilike.%${filters.searchTerm}%,
-        location.ilike.%${filters.searchTerm}%
-      `);
+      // Always use partial match for better search results
+      query = query.or(
+        `name.ilike.%${filters.searchTerm}%,` +
+        `location.ilike.%${filters.searchTerm}%`
+      );
     }
 
     // Apply pagination

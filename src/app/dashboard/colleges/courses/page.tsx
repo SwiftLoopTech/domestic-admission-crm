@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Card,
   CardHeader,
@@ -23,24 +23,39 @@ import {
   MapPinIcon,
   DollarSignIcon,
   SearchIcon,
-  GraduationCapIcon,
   BedDoubleIcon,
-  Loader2Icon
+  Loader2Icon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+// Removed unused imports
 import { useCourses } from "@/hooks/useCourses"
 import { useColleges } from "@/hooks/useColleges"
 import { useUserRole } from "@/hooks/useUserRole"
-import { College, CourseWithTypedFees } from "@/types/colleges"
+import { CourseWithTypedFees } from "@/types/colleges"
 
 
 
 export default function CoursesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCourse, setSelectedCourse] = useState<CourseWithTypedFees | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("")
   const { userRole } = useUserRole()
   const isAgent = userRole === "agent"
+  const pageSize = 12
+
+  // Debounce search term to avoid too many requests
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm)
+      setCurrentPage(1) // Reset to first page on new search
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchTerm])
 
   // Get both courses and colleges data
   const {
@@ -48,8 +63,9 @@ export default function CoursesPage() {
     isLoading: isLoadingCourses,
     isError: isErrorCourses
   } = useCourses({
-    searchTerm: searchTerm,
-    limit: 50
+    searchTerm: debouncedSearchTerm,
+    limit: pageSize,
+    offset: (currentPage - 1) * pageSize
   })
 
   const {
@@ -96,14 +112,18 @@ export default function CoursesPage() {
       </div>
 
       {/* Search Section */}
-      <div className="relative max-w-2xl mx-auto">
-        <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-        <Input
-          placeholder="Search courses by name, college, or location..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10 h-12 text-lg border-2 border-gray-200 focus:border-teal-500 rounded-xl shadow-sm"
-        />
+      <div className="space-y-4 max-w-2xl mx-auto">
+        <div className="relative">
+          <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <Input
+            placeholder="Search courses by name, college, or location..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 h-12 text-lg border-2 border-gray-200 focus:border-teal-500 rounded-xl shadow-sm"
+          />
+        </div>
+
+        {/* Exact match toggle removed */}
       </div>
 
       {/* Loading State */}
@@ -113,49 +133,80 @@ export default function CoursesPage() {
           <span className="ml-3 text-lg text-gray-600">Loading courses...</span>
         </div>
       ) : (
-        /* Courses Grid */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {coursesData?.courses.map((course) => {
-            const college = getCollegeDetails(course.college_id)
-            return (
-              <Card key={course.id} className="group hover:shadow-lg transition-shadow duration-200 border">
-                <CardHeader className="space-y-3 pb-4">
-                  <div className="flex items-start justify-between">
-                    <Badge variant="secondary" className="bg-amber-100 text-amber-600 hover:bg-amber-300">
-                      #{course.slno}
-                    </Badge>
-                    <Badge variant="outline" className="border-blue-200 text-zinc-900">
-                      {course.duration_years} Years
-                    </Badge>
-                  </div>
-                  <CardTitle className="flex items-center text-xl">
-                    {course.course_name}
-                  </CardTitle>
-                  <div className="space-y-2">
-                    <CardDescription className="flex items-center text-base">
-                      <BuildingIcon className="h-5 w-5 mr-2 text-gray-500" />
-                      {college?.name || 'College not found'}
-                    </CardDescription>
-                    <CardDescription className="flex items-center text-base">
-                      <MapPinIcon className="h-5 w-5 mr-2 text-gray-500" />
-                      {college?.location || 'Location not available'}
-                    </CardDescription>
-                  </div>
-                </CardHeader>
+        <>
+          {/* Courses Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {coursesData?.courses.map((course: CourseWithTypedFees) => {
+              const college = getCollegeDetails(course.college_id || '')
+              return (
+                <Card key={course.id} className="group hover:shadow-lg transition-shadow duration-200 border">
+                  <CardHeader className="space-y-3 pb-4">
+                    <div className="flex items-start justify-between">
+                      <Badge variant="secondary" className="bg-amber-100 text-amber-600 hover:bg-amber-300">
+                        #{course.slno}
+                      </Badge>
+                      <Badge variant="outline" className="border-blue-200 text-zinc-900">
+                        {course.duration_years} Years
+                      </Badge>
+                    </div>
+                    <CardTitle className="flex items-center text-xl">
+                      {course.course_name}
+                    </CardTitle>
+                    <div className="space-y-2">
+                      <CardDescription className="flex items-center text-base">
+                        <BuildingIcon className="h-5 w-5 mr-2 text-gray-500" />
+                        {college?.name || 'College not found'}
+                      </CardDescription>
+                      <CardDescription className="flex items-center text-base">
+                        <MapPinIcon className="h-5 w-5 mr-2 text-gray-500" />
+                        {college?.location || 'Location not available'}
+                      </CardDescription>
+                    </div>
+                  </CardHeader>
 
-                <CardFooter className="pt-4">
-                  <Button
-                    onClick={() => setSelectedCourse(course)}
-                    className="w-full bg-[#FFC11F] text-black"
-                  >
-                    <DollarSignIcon className="h-4 w-4 mr-2" />
-                    View Complete Details
-                  </Button>
-                </CardFooter>
-              </Card>
-            )
-          })}
-        </div>
+                  <CardFooter className="pt-4">
+                    <Button
+                      onClick={() => setSelectedCourse(course)}
+                      className="w-full bg-[#FFC11F] text-black"
+                    >
+                      <DollarSignIcon className="h-4 w-4 mr-2" />
+                      View Complete Details
+                    </Button>
+                  </CardFooter>
+                </Card>
+              )
+            })}
+          </div>
+
+          {/* Pagination */}
+          {coursesData && coursesData.total && coursesData.total > 0 && (
+            <div className="flex items-center justify-between mt-8">
+              <div className="text-sm text-gray-500">
+                Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, coursesData.total || 0)} of {coursesData.total} courses
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeftIcon className="h-4 w-4 mr-2" />
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  disabled={!coursesData || !coursesData.total || currentPage * pageSize >= coursesData.total}
+                >
+                  Next
+                  <ChevronRightIcon className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* Course Details Modal */}

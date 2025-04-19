@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useColleges, useDeleteCollege } from "@/hooks/useColleges";
 import { Database } from "@/types/supabase";
 import {
@@ -20,10 +20,15 @@ import {
   MapPinIcon,
   BookOpenIcon,
   BuildingIcon,
-  SearchIcon
+  SearchIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CheckIcon
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+// import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { CollegeCard } from "@/components/colleges/college-card"
 import { useUserRole } from "@/hooks/useUserRole"
@@ -33,10 +38,29 @@ type College = Database['public']['Tables']['colleges']['Row'];
 
 export default function CollegesPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const { data, isLoading } = useColleges({ searchTerm });
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 9; // 3x3 grid
+
+  const { data, isLoading } = useColleges({
+    searchTerm: debouncedSearchTerm,
+    limit: pageSize,
+    offset: (currentPage - 1) * pageSize
+  });
+
   const deleteCollegeMutation = useDeleteCollege();
   const { userRole } = useUserRole();
   const isAgent = userRole === "agent";
+
+  // Debounce search term to avoid too many requests
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1); // Reset to first page on new search
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -79,14 +103,18 @@ export default function CollegesPage() {
       </div>
 
       {/* Search Section */}
-      <div className="relative">
-        <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-        <Input
-          placeholder="Search colleges by name or location..."
-          value={searchTerm}
-          onChange={(e) => handleSearch(e.target.value)}
-          className="pl-9"
-        />
+      <div className="space-y-4">
+        <div className="relative">
+          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+          <Input
+            placeholder="Search colleges by name or location..."
+            value={searchTerm}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+
+        {/* Exact match toggle removed */}
       </div>
 
       {/* Colleges Grid */}
@@ -99,15 +127,46 @@ export default function CollegesPage() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {data?.colleges.map((college) => (
-            <CollegeCard
-              key={college.id}
-              college={college}
-              onDelete={() => handleDelete(college.id)}
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {data?.colleges.map((college) => (
+              <CollegeCard
+                key={college.id}
+                college={college}
+                onDelete={() => handleDelete(college.id)}
+              />
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {data && data.total && data.total > 0 && (
+            <div className="flex items-center justify-between mt-8">
+              <div className="text-sm text-gray-500">
+                Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, data.total)} of {data.total} colleges
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeftIcon className="h-4 w-4 mr-2" />
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  disabled={!data || !data.total || currentPage * pageSize >= data.total}
+                >
+                  Next
+                  <ChevronRightIcon className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
