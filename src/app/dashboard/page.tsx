@@ -38,13 +38,15 @@ export default function DashboardPage() {
           Welcome, {name}!
         </h1>
 
-        <ApplicationModal/>
+        <ApplicationModal />
       </div>
 
       {userRole === "agent" ? (
         <div>
           <p className="mb-9 ">Welcome to your agent dashboard.</p>
           {/* Agent-specific content */}
+
+          {/* Filters */}
           <div className="flex gap-4 mb-6">
             <Select>
               <SelectTrigger className="border-zinc-400 hover:bg-zinc-200 transition focus-visible:ring-0">
@@ -94,6 +96,8 @@ export default function DashboardPage() {
               Apply Filter
             </Button>
           </div>
+
+          {/* Data tiles : Currently data is hardcoded. Need to replace data */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card className="gap-3 h-fit w-2xs border-zinc-400 shadow-md hover:shadow-xl transition duration-200">
               <CardHeader className="">
@@ -145,6 +149,8 @@ export default function DashboardPage() {
             </Card>
 
           </div>
+
+
           <div className="flex gap-5">
             <div className="w-xs mt-12">
               <div className="bg-[#FFC11F44] w-fit p-2 rounded-lg text-[#FFC11F]">

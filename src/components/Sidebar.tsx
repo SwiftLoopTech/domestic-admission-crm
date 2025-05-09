@@ -13,7 +13,9 @@ import {
   LucideMenu,
   LucideX,
   LucideChevronRight,
-  LucideUniversity
+  LucideUniversity,
+  HandCoins,
+  Wallet
 } from "lucide-react";
 import { supabase } from "@/utils/supabase";
 
@@ -82,7 +84,17 @@ export function Sidebar({ userRole }: SidebarProps) {
         name: "Sub-Agents",
         href: "/dashboard/sub-agents",
         icon: LucideUserPlus
-      }
+      },
+      {
+        name: "Wallet",
+        href: "/dashboard/wallet",
+        icon: Wallet
+      },
+      {
+        name: "Commissions",
+        href: "/dashboard/commissions",
+        icon: HandCoins
+      },
     ];
 
     return userRole === "agent" ? [...baseItems, ...agentOnlyItems] : [...baseItems];
@@ -117,12 +129,12 @@ export function Sidebar({ userRole }: SidebarProps) {
       {/* Navigation menu */}
       <ScrollArea className="flex-1 py-6 px-4">
         <nav className="flex flex-col space-y-2">
-          {navItems.map((item) => {
+          {navItems.map((item,index) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
 
             return (
-              <TooltipProvider key={item.href}>
+              <TooltipProvider key={index}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Link

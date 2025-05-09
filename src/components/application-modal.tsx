@@ -76,7 +76,7 @@ export function ApplicationModal() {
         // For sub-agents, always use their own ID
         // For agents, use the selected subagent_id or null
         subagent_id: userRole === "sub-agent" ? currentUserId :
-                    (data.subagent_id === "self" ? null : data.subagent_id),
+          (data.subagent_id === "self" ? null : data.subagent_id),
         application_status: APPLICATION_STATUS.PENDING,
       };
 
@@ -121,7 +121,7 @@ export function ApplicationModal() {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[600px] bg-white">
+      <DialogContent className="sm:max-w-[600px] bg-background">
         <DialogHeader className="mb-4">
           <DialogTitle className="text-xl">Create New Application</DialogTitle>
           <DialogDescription>
@@ -186,14 +186,14 @@ export function ApplicationModal() {
                   name="subagent_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Assign to Sub-Agent (Optional)</FormLabel>
+                      <FormLabel>Assign to Sub-Agent</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value || ""}
                       >
                         <FormControl>
                           <SelectTrigger className="border-zinc-500">
-                            <SelectValue  placeholder="Select sub-agent (optional)" />
+                            <SelectValue placeholder="Select sub-agent" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="bg-white">
@@ -208,9 +208,9 @@ export function ApplicationModal() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormDescription>
+                      {/* <FormDescription>
                         Leave empty to assign to yourself
-                      </FormDescription>
+                      </FormDescription> */}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -219,12 +219,12 @@ export function ApplicationModal() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Preferred College */}
+              {/* Modified Preferred College Select */}
               <FormField
                 control={form.control}
                 name="preferred_college"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="w-full">
                     <FormLabel>Preferred College</FormLabel>
                     <Select
                       onValueChange={(value) => {
@@ -237,14 +237,24 @@ export function ApplicationModal() {
                       value={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger className="border-zinc-500">
-                          <SelectValue placeholder="Select a college" />
+                        <SelectTrigger className="border-zinc-500 w-full">
+                          <SelectValue placeholder="Select a college" className="truncate block" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-white">
+                      <SelectContent
+                        className="bg-background max-h-[40dvh] overflow-y-auto"
+                        position="popper"
+                        sideOffset={5}
+                        align="start"
+                      >
                         {colleges.map((college) => (
-                          <SelectItem key={college.id} value={college.id}>
-                            {college.name}
+                          <SelectItem
+                            key={college.id}
+                            value={college.id}
+                            className="pr-6"
+                            title={college.name} // Shows full name on hover
+                          >
+                            <span className="truncate block max-w-[200px]">{college.name}</span>
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -254,32 +264,42 @@ export function ApplicationModal() {
                 )}
               />
 
-              {/* Preferred Course */}
+              {/* Modified Preferred Course Select */}
               <FormField
                 control={form.control}
                 name="preferred_course"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="w-full">
                     <FormLabel>Preferred Course</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger className="border-zinc-500">
-                          <SelectValue placeholder="Select a course" />
+                        <SelectTrigger className="border-zinc-500 w-full">
+                          <SelectValue placeholder="Select a course" className="truncate block" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-white">
+                      <SelectContent
+                        className="bg-background max-h-[40dvh] overflow-y-auto"
+                        position="popper"
+                        sideOffset={5}
+                        align="start"
+                      >
                         {currentCollege === null ? (
-                          <p className="text-sm">Select a college first</p>
+                          <p className="text-sm p-2">Select a college first</p>
                         ) : filteredCourses.length === 0 ? (
-                          <p>No courses available</p>
-                        ) : (filteredCourses.map((course) => (
-                          <SelectItem key={course.id} value={course.id}>
-                            {course.name}
+                          <p className="text-sm p-2">No courses available</p>
+                        ) : filteredCourses.map((course) => (
+                          <SelectItem
+                            key={course.id}
+                            value={course.id}
+                            className="pr-6"
+                            title={course.name} // Shows full name on hover
+                          >
+                            <span className="truncate block max-w-[200px]">{course.name}</span>
                           </SelectItem>
-                        )))}
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
