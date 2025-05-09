@@ -30,7 +30,9 @@ const applicationSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   phone: z.string().min(10, "Please enter a valid phone number"),
   preferred_college: z.string().min(1, "Please select a college"),
+  college_id: z.string().uuid(), // Make sure it's defined as UUID
   preferred_course: z.string().min(1, "Please select a course"),
+  course_id: z.string().uuid(), // Make sure it's defined as UUID
   notes: z.string().optional(),
   subagent_id: z.string().uuid().optional().nullable(),
 });
@@ -53,6 +55,7 @@ export function ApplicationModal() {
   const filteredCourses = courses.filter((course) => {
     return course.collegeID === currentCollege?.id;
   })
+
   const form = useForm<ApplicationFormValues>({
     resolver: zodResolver(applicationSchema),
     defaultValues: {
@@ -60,41 +63,75 @@ export function ApplicationModal() {
       email: "",
       phone: "",
       preferred_college: "",
+      college_id: "",
       preferred_course: "",
+      course_id: "",
       notes: "",
       subagent_id: null,
     },
   });
 
+  // Add state to store the current user's ID
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // Fetch current user ID when component mounts
+  useEffect(() => {
+    const fetchCurrentUserId = async () => {
+      try {
+        const userId = await getCurrentUserId();
+        setCurrentUserId(userId);
+      } catch (error) {
+        console.error("Failed to get current user ID:", error);
+        toast.error("Failed to get current user ID");
+      }
+    };
+
+    fetchCurrentUserId();
+  }, []);
+
+
+  // In your onSubmit function:
   async function onSubmit(data: ApplicationFormValues) {
-    try {
-      // Get the current user's ID using our utility function
-      const currentUserId = await getCurrentUserId();
+  try {
+    // Get the current user's ID using our utility function
+    const currentUserId = await getCurrentUserId();
 
-      const applicationData = {
-        ...data,
-        // For sub-agents, always use their own ID
-        // For agents, use the selected subagent_id or null
-        subagent_id: userRole === "sub-agent" ? currentUserId :
-          (data.subagent_id === "self" ? null : data.subagent_id),
-        application_status: APPLICATION_STATUS.PENDING,
-      };
+    // Find the selected college and course names
+    const selectedCollege = colleges.find((college) => college.id === data.college_id);
+    const selectedCourse = courses.find((course) => course.id === data.course_id);
 
-      // Use the mutation to create the application
-      createApplication(applicationData, {
-        onSuccess: () => {
-          // Close the modal
-          setOpen(false);
+    console.log("Selected College:", selectedCollege);
+    console.log("Selected Course:", selectedCourse);
+    console.log("College ID:", data.college_id);
+    console.log("Course ID:", data.course_id);
 
-          // Reset form
-          form.reset();
-        }
-      });
-    } catch (error) {
-      console.error("Error preparing application data:", error);
-      toast.error(`Failed to prepare application data: ${(error as Error).message}`);
-    }
+    const applicationData = {
+      ...data,
+      // Ensure both ID and name fields are set correctly
+      college_id: data.college_id,
+      course_id: data.course_id,
+      preferred_college: selectedCollege?.name || data.preferred_college,
+      preferred_course: selectedCourse?.name || data.preferred_course,
+
+      // Handle subagent assignment
+      subagent_id: data.subagent_id,
+      application_status: APPLICATION_STATUS.PENDING,
+    };
+
+    console.log("Application Data:", applicationData);
+
+    // Use the mutation to create the application
+    createApplication(applicationData, {
+      onSuccess: () => {
+        setOpen(false);
+        form.reset();
+      }
+    });
+  } catch (error) {
+    console.error("Error preparing application data:", error);
+    toast.error(`Failed to prepare application data: ${(error as Error).message}`);
   }
+}
 
   // Reset form when dialog is closed
   useEffect(() => {
@@ -104,7 +141,9 @@ export function ApplicationModal() {
         email: "",
         phone: "",
         preferred_college: "",
+        college_id: "",
         preferred_course: "",
+        course_id: "",
         notes: "",
         subagent_id: null,
       });
@@ -197,7 +236,9 @@ export function ApplicationModal() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="bg-white">
-                          <SelectItem value="self">Assign to myself</SelectItem>
+                          {currentUserId && (
+                            <SelectItem value={currentUserId}>Assign to myself</SelectItem>
+                          )}
                           {subagents.map((subagent) => (
                             <SelectItem
                               key={subagent.user_id}
@@ -208,9 +249,6 @@ export function ApplicationModal() {
                           ))}
                         </SelectContent>
                       </Select>
-                      {/* <FormDescription>
-                        Leave empty to assign to yourself
-                      </FormDescription> */}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -228,13 +266,23 @@ export function ApplicationModal() {
                     <FormLabel>Preferred College</FormLabel>
                     <Select
                       onValueChange={(value) => {
-                        field.onChange(value);
+                        // Set college_id directly
+                        form.setValue("college_id", value);
+
+                        // Find the selected college
                         const selectedCollege = colleges.find((college) => college.id === value);
-                        const data = { id: selectedCollege?.id, name: selectedCollege?.name };
-                        setCurrentCollege(data);
+
+                        // Set the current college for filtering courses
+                        setCurrentCollege({ id: value, name: selectedCollege?.name });
+
+                        // Set preferred_college to the name, not the ID
+                        field.onChange(selectedCollege?.name || "");
+
+                        // Reset course values when college changes
                         form.setValue("preferred_course", "");
+                        form.setValue("course_id", "");
                       }}
-                      value={field.value}
+                      value={form.watch("college_id")} // Watch college_id instead
                     >
                       <FormControl>
                         <SelectTrigger className="border-zinc-500 w-full">
@@ -252,7 +300,7 @@ export function ApplicationModal() {
                             key={college.id}
                             value={college.id}
                             className="pr-6"
-                            title={college.name} // Shows full name on hover
+                            title={college.name}
                           >
                             <span className="truncate block max-w-[200px]">{college.name}</span>
                           </SelectItem>
@@ -272,8 +320,17 @@ export function ApplicationModal() {
                   <FormItem className="w-full">
                     <FormLabel>Preferred Course</FormLabel>
                     <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
+                      onValueChange={(value) => {
+                        // Set course_id directly
+                        form.setValue("course_id", value);
+
+                        // Find the selected course
+                        const selectedCourse = filteredCourses.find((course) => course.id === value);
+
+                        // Set preferred_course to the name, not the ID
+                        field.onChange(selectedCourse?.name || "");
+                      }}
+                      value={form.watch("course_id")} // Watch course_id instead
                     >
                       <FormControl>
                         <SelectTrigger className="border-zinc-500 w-full">
@@ -295,7 +352,7 @@ export function ApplicationModal() {
                             key={course.id}
                             value={course.id}
                             className="pr-6"
-                            title={course.name} // Shows full name on hover
+                            title={course.name}
                           >
                             <span className="truncate block max-w-[200px]">{course.name}</span>
                           </SelectItem>

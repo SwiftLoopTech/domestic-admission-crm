@@ -1,5 +1,7 @@
 import { supabase } from "@/utils/supabase";
 import { v4 as uuidv4 } from "uuid";
+import { APPLICATION_STATUS } from "@/utils/application-status";
+import { createTransaction } from "@/services/transactions";
 
 interface ApplicationInput {
   student_name: string;
@@ -119,16 +121,17 @@ export async function updateApplicationStatus(applicationId: string, newStatus: 
     // Get user role to log for debugging
     const { data: agentData, error: agentError } = await supabase
       .from('agents')
-      .select('super_agent')
+      .select('super_agent, user_id')
       .eq('user_id', session.user.id)
       .single();
 
     if (agentError) {
       console.error('Error fetching agent data:', agentError);
-    } else {
-      console.log('Agent data:', agentData);
-      console.log('User is:', agentData.super_agent === null ? 'agent' : 'subagent');
+      throw new Error(`Failed to fetch agent data: ${agentError.message}`);
     }
+
+    const isAgent = agentData.super_agent === null;
+    console.log('User is:', isAgent ? 'agent' : 'subagent');
 
     // Get the application to check permissions
     const { data: applicationData, error: applicationError } = await supabase
@@ -162,6 +165,66 @@ export async function updateApplicationStatus(applicationId: string, newStatus: 
     }
 
     console.log('Update successful, returned data:', data);
+
+    // If the application is being marked as completed, create a transaction
+    if (newStatus === APPLICATION_STATUS.COMPLETED) {
+      try {
+        // Get course details to fetch the firstYear fee
+        const { data: courseData, error: courseError } = await supabase
+          .from('courses')
+          .select('*, colleges(name)')
+          .eq('id', applicationData.preferred_course)
+          .single();
+
+        if (courseError) {
+          console.error('Error fetching course data:', courseError);
+          throw new Error(`Failed to fetch course data: ${courseError.message}`);
+        }
+
+        // Get college name for the description
+        const { data: collegeData, error: collegeError } = await supabase
+          .from('colleges')
+          .select('name')
+          .eq('id', applicationData.preferred_college)
+          .single();
+
+        if (collegeError) {
+          console.error('Error fetching college data:', collegeError);
+          throw new Error(`Failed to fetch college data: ${collegeError.message}`);
+        }
+
+        // Extract the firstYear fee from the course fees
+        let amount = 0;
+        if (courseData && courseData.fees) {
+          // Check if fees is a string that needs parsing
+          const fees = typeof courseData.fees === 'string'
+            ? JSON.parse(courseData.fees)
+            : courseData.fees;
+
+          // Try to get firstYear fee, fallback to 0 if not found
+          amount = fees.firstYear || 0;
+        }
+
+        // Get course name and college name for better description
+        const courseName = courseData ? courseData.course_name : applicationData.preferred_course;
+        const collegeName = collegeData ? collegeData.name : applicationData.preferred_college;
+
+        // Create a transaction for this completed application
+        await createTransaction({
+          application_id: applicationId,
+          student_name: applicationData.student_name,
+          amount: amount,
+          subagent_id: applicationData.subagent_id,
+          description: `Payment for ${courseName} at ${collegeName}`,
+          notes: "Transaction created automatically when application was marked as completed."
+        });
+        console.log('Transaction created for completed application with amount:', amount);
+      } catch (transactionError) {
+        console.error('Error creating transaction:', transactionError);
+        // Don't throw here, we still want to return the updated application
+        // Just log the error
+      }
+    }
 
     return data;
   } catch (error) {
@@ -280,6 +343,38 @@ export async function getApplications() {
   // Determine if this is a main agent or subagent
   let applications = [];
 
+  // First, fetch all colleges to use for name lookups
+  const { data: colleges, error: collegesError } = await supabase
+    .from('colleges')
+    .select('id, name');
+
+  if (collegesError) {
+    console.error('Error fetching colleges:', collegesError);
+    throw new Error(`Failed to fetch colleges: ${collegesError.message}`);
+  }
+
+  // Create a map of college IDs to names for quick lookup
+  const collegeMap = new Map();
+  colleges.forEach((college: any) => {
+    collegeMap.set(college.id, college.name);
+  });
+
+  // Fetch all courses to use for name lookups
+  const { data: courses, error: coursesError } = await supabase
+    .from('courses')
+    .select('id, course_name');
+
+  if (coursesError) {
+    console.error('Error fetching courses:', coursesError);
+    throw new Error(`Failed to fetch courses: ${coursesError.message}`);
+  }
+
+  // Create a map of course IDs to names for quick lookup
+  const courseMap = new Map();
+  courses.forEach((course: any) => {
+    courseMap.set(course.id, course.course_name);
+  });
+
   if (agentData.super_agent === null) {
     // This is a main agent - get all applications where superagent_id equals their user_id
     const { data, error } = await supabase
@@ -311,6 +406,21 @@ export async function getApplications() {
 
     applications = data || [];
   }
+
+  // Enhance applications with college and course names
+  applications = applications.map((app: any) => {
+    // Add college name if ID exists and is in our map
+    const collegeName = collegeMap.get(app.preferred_college) || app.preferred_college;
+
+    // Add course name if ID exists and is in our map
+    const courseName = courseMap.get(app.preferred_course) || app.preferred_course;
+
+    return {
+      ...app,
+      college_name: collegeName,
+      course_name: courseName
+    };
+  });
 
   return applications;
 }

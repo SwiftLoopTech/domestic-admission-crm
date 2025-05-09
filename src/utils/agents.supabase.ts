@@ -169,8 +169,18 @@ export async function getSubagents() {
       throw new Error("No authenticated user found");
     }
 
+    const {data: agentData, error: agentError} = await supabase
+    .from("agents")
+    .select('user_id, name, email, created_at')
+    .eq('user_id', userId);
+    
+    if (agentError) {
+      console.error("Error fetching agent data:", agentError);
+      throw new Error(`Failed to fetch agent: ${agentError.message}`);
+    }
+
     // Get all subagents for this agent
-    const { data, error } = await supabase
+    const { data: subData, error } = await supabase
       .from('agents')
       .select('user_id, name, email, created_at')
       .eq('super_agent', userId);
@@ -179,6 +189,11 @@ export async function getSubagents() {
       console.error("Error fetching subagents:", error);
       throw new Error(`Failed to fetch subagents: ${error.message}`);
     }
+
+    const data = [
+      agentData[0],
+      ...(subData || [])
+    ];
 
     return data || [];
   } catch (error) {

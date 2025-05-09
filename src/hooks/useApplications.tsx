@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getApplications, createApplication, updateApplicationStatus, updateApplication } from "@/services/applications";
 import { toast } from "sonner";
-import { isValidStatusTransition } from "@/utils/application-status";
+import { isValidStatusTransition, APPLICATION_STATUS } from "@/utils/application-status";
 import { useUserRole } from "@/hooks/useUserRole";
 
 interface ApplicationInput {
@@ -11,7 +11,9 @@ interface ApplicationInput {
   email: string;
   phone: string;
   preferred_college: string;
+  college_id: string;
   preferred_course: string;
+  course_id: string;
   application_status: string;
   notes?: string;
   subagent_id?: string | null;
@@ -20,9 +22,11 @@ interface ApplicationInput {
 interface ApplicationUpdateInput {
   student_name?: string;
   email?: string;
-  phone?: string;
+  phone?: string; 
   preferred_college?: string;
+  college_id?: string;
   preferred_course?: string;
+  course_id?: string;
   notes?: string;
   document_links?: string[];
 }
@@ -105,6 +109,11 @@ export function useApplications() {
 
       // Invalidate and refetch to ensure data consistency
       queryClient.invalidateQueries({ queryKey: ["applications"] });
+
+      // If the application was marked as completed, also invalidate transactions
+      if (updatedApplication.application_status === APPLICATION_STATUS.COMPLETED) {
+        queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      }
 
       // Show success message
       toast.success(`Application status updated to ${updatedApplication.application_status}`);
