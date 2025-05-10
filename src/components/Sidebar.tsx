@@ -18,6 +18,7 @@ import {
   Wallet
 } from "lucide-react";
 import { supabase } from "@/utils/supabase";
+import { useAgentData } from "@/hooks/useAgentData";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,9 @@ export function Sidebar({ userRole }: SidebarProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
+  // Use the hook to fetch agent data
+  const { agent, isLoading: isLoadingAgent } = useAgentData();
+
   // Handle sign out
   const handleSignOut = async () => {
     try {
@@ -75,15 +79,6 @@ export function Sidebar({ userRole }: SidebarProps) {
         name: "Colleges",
         href: "/dashboard/colleges",
         icon: LucideUniversity
-      }
-    ];
-
-    // Items only for agents (not sub-agents)
-    const agentOnlyItems = [
-      {
-        name: "Sub-Agents",
-        href: "/dashboard/sub-agents",
-        icon: LucideUserPlus
       },
       {
         name: "Wallet",
@@ -97,12 +92,32 @@ export function Sidebar({ userRole }: SidebarProps) {
       },
     ];
 
+    // Items only for agents (not sub-agents)
+    const agentOnlyItems = [
+      {
+        name: "Sub-Agents",
+        href: "/dashboard/sub-agents",
+        icon: LucideUserPlus
+      },
+    ];
+
     return userRole === "agent" ? [...baseItems, ...agentOnlyItems] : [...baseItems];
   };
 
   const navItems = getNavItems();
-  const userInitials = "JD"; // Replace with actual user initials
-  const userName = "John Doe"; // Replace with actual user name
+  // Get user initials from agent name
+  const getUserInitials = () => {
+    if (!agent?.name) return "NA";
+
+    const nameParts = agent.name.trim().split(/\s+/);
+    if (nameParts.length === 1) return nameParts[0].substring(0, 2).toUpperCase();
+
+    return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
+  };
+
+  const userInitials = getUserInitials();
+  const userName = agent?.name || "Loading...";
+
 
   const sidebarContent = (
     <div className="flex h-full flex-col border-r border-zinc-400 bg-[#EBF6FA] fixed w-72">
@@ -120,7 +135,7 @@ export function Sidebar({ userRole }: SidebarProps) {
               {userName}
             </span>
             <span className="text-xs text-teal-50">
-              {userRole === "agent" ? "Administrator" : "Limited access"}
+              {userRole === "agent" ? "Agent" : "Sub-Agent"}
             </span>
           </div>
         </div>
@@ -129,7 +144,7 @@ export function Sidebar({ userRole }: SidebarProps) {
       {/* Navigation menu */}
       <ScrollArea className="flex-1 py-6 px-4">
         <nav className="flex flex-col space-y-2">
-          {navItems.map((item,index) => {
+          {navItems.map((item, index) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
 
@@ -154,7 +169,7 @@ export function Sidebar({ userRole }: SidebarProps) {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        
+
                         {isActive && (
                           <LucideChevronRight size={16} className="text-black" />
                         )}
@@ -173,7 +188,7 @@ export function Sidebar({ userRole }: SidebarProps) {
         <Button
           variant="outline"
           className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-          onClick={()=> handleSignOut()}
+          onClick={() => handleSignOut()}
         >
           <LucideLogOut className="mr-2 h-4 w-4" />
           Sign out

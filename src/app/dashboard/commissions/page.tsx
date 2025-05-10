@@ -134,7 +134,7 @@ export default function CommissionsPage() {
             <p className="text-4xl font-medium">{formatCurrency(totalTransactionAmount)}</p>
           </CardContent>
         </Card>
-        <Card className="border-zinc-400 shadow-md hover:shadow-xl transition duration-200">
+        {/* <Card className="border-zinc-400 shadow-md hover:shadow-xl transition duration-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-zinc-700 font-medium flex items-center">
               <Percent className="h-4 w-4 mr-1" /> Commission Rate
@@ -148,7 +148,7 @@ export default function CommissionsPage() {
               </span>
             </p>
           </CardContent>
-        </Card>
+        </Card> */}
         <Card className="border-zinc-400 shadow-md hover:shadow-xl transition duration-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-zinc-700 font-medium flex items-center">
@@ -262,7 +262,7 @@ export default function CommissionsPage() {
       </Card>
 
       {/* Commission Structure Info */}
-      <Card className="border-zinc-400 shadow-md">
+      {/* <Card className="border-zinc-400 shadow-md">
         <CardHeader>
           <CardTitle className="flex items-center">
             <BarChart3 className="h-5 w-5 mr-2" /> Commission Structure
@@ -285,7 +285,7 @@ export default function CommissionsPage() {
             </p>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Commission Details Dialog */}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
@@ -400,10 +400,10 @@ export default function CommissionsPage() {
                           const notes = prompt("Enter notes for this commission:", selectedCommission.notes || "");
                           if (notes !== null) {
                             // Call the updateCommission function
-                            updateCommission({
-                              commissionId: selectedCommission.id,
-                              data: { notes }
-                            });
+                            updateCommission(
+                              selectedCommission.id,
+                              { notes }
+                            );
                           }
                         }}
                       >
@@ -437,7 +437,7 @@ function CommissionsSkeleton() {
 
       <div className="space-y-2">
         <Skeleton className="h-10 w-full bg-zinc-400" />
-        <Skeleton className="h-96 w-full bg-zinc-400" />
+        <Skeleton className="h-40 w-full bg-zinc-400" />
       </div>
     </div>
   );
