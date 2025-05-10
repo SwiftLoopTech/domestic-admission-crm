@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useSubagentNames } from "@/hooks/useSubagentNames";
 import { format } from "date-fns";
 import {
   Card,
@@ -49,6 +50,7 @@ import {
 export default function WalletPage() {
   const { transactions, isLoading } = useTransactions();
   const { userRole } = useUserRole();
+  const { getSubagentName, isLoading: isLoadingSubagents } = useSubagentNames();
   const isAgent = userRole === "agent";
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
@@ -79,7 +81,7 @@ export default function WalletPage() {
     setDetailsOpen(true);
   };
 
-  if (isLoading) {
+  if (isLoading || (isAgent && isLoadingSubagents)) {
     return <WalletSkeleton />;
   }
 
@@ -188,14 +190,14 @@ export default function WalletPage() {
                     <TableCell>{formatCurrency(transaction.amount)}</TableCell>
                     <TableCell>
                       <Badge
-                        className={TRANSACTION_STATUS_COLORS[transaction.transaction_status]}
+                        className={`${TRANSACTION_STATUS_COLORS[transaction.transaction_status]} text-black`}
                       >
                         {transaction.transaction_status}
                       </Badge>
                     </TableCell>
                     {isAgent && (
                       <TableCell>
-                        {transaction.subagent_id ? "Sub-agent" : "Direct"}
+                        {transaction.subagent_id ? getSubagentName(transaction.subagent_id) : "Direct"}
                       </TableCell>
                     )}
                     <TableCell className="text-right">
@@ -247,6 +249,15 @@ export default function WalletPage() {
                     </h3>
                     <p>{selectedTransaction.student_name}</p>
                   </div>
+
+                  {isAgent && selectedTransaction.subagent_id && (
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500 flex items-center">
+                        <User className="h-4 w-4 mr-1" /> Sub-Agent
+                      </h3>
+                      <p>{getSubagentName(selectedTransaction.subagent_id)}</p>
+                    </div>
+                  )}
 
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 flex items-center">

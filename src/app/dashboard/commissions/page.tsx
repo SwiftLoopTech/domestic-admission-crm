@@ -49,6 +49,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useSubagentNames } from "@/hooks/useSubagentNames";
 
 export default function CommissionsPage() {
   const { transactions, isLoading: isLoadingTransactions } = useTransactions();
@@ -59,6 +60,7 @@ export default function CommissionsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCommission, setSelectedCommission] = useState<any>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const { getSubagentName, isLoading: isLoadingSubagents } = useSubagentNames();
 
   // Filter completed transactions only
   const completedTransactions = transactions.filter(
@@ -234,14 +236,14 @@ export default function CommissionsPage() {
                           currentStatus={commission.payment_status}
                         />
                       ) : (
-                        <Badge className={`bg-${commission.payment_status === 'completed' ? 'green' : 'yellow'}-200`}>
+                        <Badge className={`${commission.payment_status === 'completed' ? 'bg-green-200' : 'bg-yellow-200'} text-black`}>
                           {commission.payment_status}
                         </Badge>
                       )}
                     </TableCell>
                     {isAgent && (
                       <TableCell>
-                        {commission.subagent_id ? "Sub-agent" : "Direct"}
+                        {commission.subagent_id ? getSubagentName(commission.subagent_id) : "Direct"}
                       </TableCell>
                     )}
                     <TableCell className="text-right">
@@ -374,7 +376,7 @@ export default function CommissionsPage() {
                           currentStatus={selectedCommission.payment_status}
                         />
                       ) : (
-                        <Badge className={`bg-${selectedCommission.payment_status === 'completed' ? 'green' : 'yellow'}-200`}>
+                        <Badge className={`${selectedCommission.payment_status === 'completed' ? 'bg-green-200' : 'bg-yellow-200'} text-black`}>
                           {selectedCommission.payment_status}
                         </Badge>
                       )}
