@@ -50,6 +50,15 @@ export async function createTransaction(data: TransactionInput) {
     // Determine the superagent ID (for partitioning)
     const superAgentId = agentData.super_agent || agentData.user_id;
 
+    // Log the incoming data to verify subagent_id
+    console.log('Creating transaction with data:', {
+      application_id: data.application_id,
+      student_name: data.student_name,
+      amount: data.amount,
+      subagent_id: data.subagent_id,
+      agent_id: superAgentId
+    });
+
     // Create the transaction data object
     const transactionData = {
       id: uuidv4(),
@@ -155,24 +164,62 @@ export async function updateTransactionStatus({
         // Get the transaction details to access application_id and subagent_id
         const transaction = data;
 
-        // Only create commission if there's a subagent involved
+        // Only create/update commission if there's a subagent involved
         if (transaction.subagent_id) {
           try {
             // Calculate commission amount (default to 10% of transaction amount)
             const commissionAmount = transaction.amount * 0.1;
 
-            // Create a commission record
-            await createCommission({
-              application_id: transaction.application_id,
-              transaction_id: transaction.id,
-              amount: commissionAmount,
-              agent_id: transaction.agent_id,
-              subagent_id: transaction.subagent_id,
-              notes: "Commission created automatically when transaction was marked as completed."
-            });
-            console.log('Commission created for completed transaction');
+            // Check if a commission already exists for this transaction
+            const { data: existingCommissions, error: commissionCheckError } = await supabase
+              .from('commissions')
+              .select('*')
+              .eq('transaction_id', transaction.id);
+
+            if (commissionCheckError) {
+              console.error('Error checking for existing commissions:', commissionCheckError);
+              throw new Error(`Failed to check for existing commissions: ${commissionCheckError.message}`);
+            }
+
+            if (existingCommissions && existingCommissions.length > 0) {
+              // Commission already exists, update it instead of creating a new one
+              const existingCommission = existingCommissions[0];
+              console.log('Found existing commission, updating instead of creating new one:', existingCommission.id);
+
+              // Update the existing commission
+              const { data: updatedCommission, error: updateError } = await supabase
+                .from('commissions')
+                .update({
+                  amount: commissionAmount, // Update the amount in case transaction amount changed
+                  updated_at: new Date().toISOString(),
+                  notes: existingCommission.notes
+                    ? `${existingCommission.notes}\n\nUpdated on ${new Date().toLocaleString()}: Transaction marked as completed again.`
+                    : "Commission updated when transaction was marked as completed again."
+                })
+                .eq('id', existingCommission.id)
+                .select()
+                .single();
+
+              if (updateError) {
+                console.error('Error updating existing commission:', updateError);
+                throw new Error(`Failed to update existing commission: ${updateError.message}`);
+              }
+
+              console.log('Successfully updated existing commission:', updatedCommission);
+            } else {
+              // No existing commission, create a new one
+              await createCommission({
+                application_id: transaction.application_id,
+                transaction_id: transaction.id,
+                amount: commissionAmount,
+                agent_id: transaction.agent_id,
+                subagent_id: transaction.subagent_id,
+                notes: "Commission created automatically when transaction was marked as completed."
+              });
+              console.log('New commission created for completed transaction');
+            }
           } catch (commissionCreateError) {
-            console.error('Error creating commission record:', commissionCreateError);
+            console.error('Error creating/updating commission record:', commissionCreateError);
             // Don't throw here, we still want to return the updated transaction
           }
         }

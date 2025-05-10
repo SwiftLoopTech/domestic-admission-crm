@@ -100,6 +100,20 @@ export function ApplicationModal() {
     const selectedCollege = colleges.find((college) => college.id === data.college_id);
     const selectedCourse = courses.find((course) => course.id === data.course_id);
 
+    // Determine the subagent_id based on user role
+    let subagentId = null;
+
+    if (userRole === "sub-agent") {
+      // If the user is a subagent, always set subagent_id to their own ID
+      subagentId = currentUserId;
+      console.log("Setting subagent_id to current user (subagent):", subagentId);
+    } else if (userRole === "agent") {
+      // If the user is an agent, use the selected subagent_id
+      // If they selected their own ID, use that
+      subagentId = data.subagent_id;
+      console.log("Agent selected subagent_id:", subagentId);
+    }
+
     const applicationData = {
       ...data,
       // Ensure both ID and name fields are set correctly
@@ -108,17 +122,18 @@ export function ApplicationModal() {
       preferred_college: selectedCollege?.name || data.preferred_college,
       preferred_course: selectedCourse?.name || data.preferred_course,
 
-      // Handle subagent assignment
-      subagent_id: data.subagent_id,
+      // Set the subagent_id based on our logic above
+      subagent_id: subagentId,
       application_status: APPLICATION_STATUS.PENDING,
     };
 
-/*     console.log("Application Data:", applicationData); */
+    console.log("Application Data:", applicationData);
     // Use the mutation to create the application
     createApplication(applicationData, {
       onSuccess: () => {
         setOpen(false);
         form.reset();
+        toast.success("Application created successfully");
       }
     });
   } catch (error) {
@@ -238,7 +253,7 @@ export function ApplicationModal() {
                               key={subagent.user_id}
                               value={subagent.user_id}
                             >
-                              {subagent.user_id === currentUserId 
+                              {subagent.user_id === currentUserId
                               ? "Assign to myself"
                               :subagent.name
                               }

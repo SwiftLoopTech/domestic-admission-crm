@@ -2,6 +2,7 @@ import { supabase } from "@/utils/supabase";
 import { v4 as uuidv4 } from "uuid";
 import { APPLICATION_STATUS } from "@/utils/application-status";
 import { createTransaction } from "@/services/transactions";
+import { TRANSACTION_STATUS } from "@/utils/transaction-status";
 
 interface ApplicationInput {
   student_name: string;
@@ -78,7 +79,12 @@ export async function createApplication(data: ApplicationInput) {
       application_status: data.application_status,
       notes: data.notes || null,
       created_by: agentData.user_id, // Use agent ID, not user ID
-      subagent_id: data.subagent_id || null,
+
+      // Set subagent_id based on role
+      // If this is a subagent, set subagent_id to their own ID
+      // If this is an agent, use the provided subagent_id or null
+      subagent_id: agentData.super_agent !== null ? agentData.user_id : (data.subagent_id || null),
+
       superagent_id: superAgentId // Add the superagent_id to filter applications
     };
 
@@ -252,15 +258,57 @@ export async function updateApplicationStatus(applicationId: string, newStatus: 
           }
         }
 
-        // Create a transaction for this completed application
-        await createTransaction({
-          application_id: applicationId,
-          student_name: applicationData.student_name,
-          amount: amount,
-          subagent_id: applicationData.subagent_id,
-          description: `Payment for ${courseName} at ${collegeName}`,
-          notes: "Transaction created automatically when application was marked as completed."
-        });
+        // Log the application data to verify subagent_id
+        console.log('Creating/updating transaction for application with subagent_id:', applicationData.subagent_id);
+
+        // Check if a transaction already exists for this application
+        const { data: existingTransactions, error: transactionCheckError } = await supabase
+          .from('transactions')
+          .select('*')
+          .eq('application_id', applicationId);
+
+        if (transactionCheckError) {
+          console.error('Error checking for existing transactions:', transactionCheckError);
+          throw new Error(`Failed to check for existing transactions: ${transactionCheckError.message}`);
+        }
+
+        if (existingTransactions && existingTransactions.length > 0) {
+          // Transaction already exists, update it instead of creating a new one
+          const existingTransaction = existingTransactions[0];
+          console.log('Found existing transaction, updating instead of creating new one:', existingTransaction.id);
+
+          // Update the existing transaction
+          const { data: updatedTransaction, error: updateError } = await supabase
+            .from('transactions')
+            .update({
+              amount: amount, // Update the amount in case it changed
+              updated_at: new Date().toISOString(),
+              notes: existingTransaction.notes
+                ? `${existingTransaction.notes}\n\nUpdated on ${new Date().toLocaleString()}: Application marked as completed again.`
+                : "Transaction updated when application was marked as completed again."
+            })
+            .eq('id', existingTransaction.id)
+            .select()
+            .single();
+
+          if (updateError) {
+            console.error('Error updating existing transaction:', updateError);
+            throw new Error(`Failed to update existing transaction: ${updateError.message}`);
+          }
+
+          console.log('Successfully updated existing transaction:', updatedTransaction);
+        } else {
+          // No existing transaction, create a new one
+          await createTransaction({
+            application_id: applicationId,
+            student_name: applicationData.student_name,
+            amount: amount,
+            subagent_id: applicationData.subagent_id, // This should now be correctly set
+            description: `Payment for ${courseName} at ${collegeName}`,
+            notes: "Transaction created automatically when application was marked as completed."
+          });
+          console.log('New transaction created for completed application with amount:', amount);
+        }
         console.log('Transaction created for completed application with amount:', amount);
       } catch (transactionError) {
         console.error('Error creating transaction:', transactionError);
@@ -339,7 +387,61 @@ export async function updateApplication(applicationId: string, data: Application
       return updatedData;
     }
 
-    // For agents, allow updating all fields
+    // For agents, check if application is completed and has a completed transaction
+    // If so, restrict what can be edited
+    if (applicationData.application_status === APPLICATION_STATUS.COMPLETED) {
+      // Check if there's a completed transaction for this application
+      const { data: transactions, error: transactionError } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('application_id', applicationId)
+        .eq('transaction_status', TRANSACTION_STATUS.COMPLETED);
+
+      if (transactionError) {
+        console.error('Error checking for completed transactions:', transactionError);
+        throw new Error(`Failed to check for completed transactions: ${transactionError.message}`);
+      }
+
+      const hasCompletedTransaction = transactions && transactions.length > 0;
+
+      if (hasCompletedTransaction) {
+        console.log('Application has completed transaction. Restricting editable fields.');
+
+        // Create a new object with only the allowed fields for completed applications
+        const allowedData: ApplicationUpdateInput = {};
+
+        // Student details can be edited
+        if (data.student_name !== undefined) allowedData.student_name = data.student_name;
+        if (data.email !== undefined) allowedData.email = data.email;
+        if (data.phone !== undefined) allowedData.phone = data.phone;
+
+        // Notes can always be updated
+        if (data.notes !== undefined) allowedData.notes = data.notes;
+
+        // Documents can be updated
+        if (data.document_links !== undefined) allowedData.document_links = data.document_links;
+
+        // Update with restricted fields
+        const { data: updatedData, error } = await supabase
+          .from('applications')
+          .update({
+            ...allowedData,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', applicationId)
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error updating application with restricted fields:', error);
+          throw new Error(`Failed to update application: ${error.message}`);
+        }
+
+        return updatedData;
+      }
+    }
+
+    // For agents with non-completed applications or without completed transactions, allow updating all fields
     const { data: updatedData, error } = await supabase
       .from('applications')
       .update({
