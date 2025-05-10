@@ -1,6 +1,7 @@
 import { supabase } from "@/utils/supabase";
 import { v4 as uuidv4 } from "uuid";
 import { TRANSACTION_STATUS } from "@/utils/transaction-status";
+import { createCommission } from "@/services/commissions";
 
 interface TransactionInput {
   application_id: string;
@@ -146,6 +147,40 @@ export async function updateTransactionStatus({
     if (error) {
       console.error('Error updating transaction status:', error);
       throw new Error(`Failed to update transaction status: ${error.message}`);
+    }
+
+    // If the transaction is being marked as completed, create a commission record
+    if (newStatus === TRANSACTION_STATUS.COMPLETED) {
+      try {
+        // Get the transaction details to access application_id and subagent_id
+        const transaction = data;
+
+        // Only create commission if there's a subagent involved
+        if (transaction.subagent_id) {
+          try {
+            // Calculate commission amount (default to 10% of transaction amount)
+            const commissionAmount = transaction.amount * 0.1;
+
+            // Create a commission record
+            await createCommission({
+              application_id: transaction.application_id,
+              transaction_id: transaction.id,
+              amount: commissionAmount,
+              agent_id: transaction.agent_id,
+              subagent_id: transaction.subagent_id,
+              notes: "Commission created automatically when transaction was marked as completed."
+            });
+            console.log('Commission created for completed transaction');
+          } catch (commissionCreateError) {
+            console.error('Error creating commission record:', commissionCreateError);
+            // Don't throw here, we still want to return the updated transaction
+          }
+        }
+      } catch (commissionError) {
+        console.error('Error creating commission:', commissionError);
+        // Don't throw here, we still want to return the updated transaction
+        // Just log the error
+      }
     }
 
     return data;
