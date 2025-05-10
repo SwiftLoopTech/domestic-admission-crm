@@ -169,45 +169,88 @@ export async function updateApplicationStatus(applicationId: string, newStatus: 
     // If the application is being marked as completed, create a transaction
     if (newStatus === APPLICATION_STATUS.COMPLETED) {
       try {
-        // Get course details to fetch the firstYear fee
-        const { data: courseData, error: courseError } = await supabase
-          .from('courses')
-          .select('*, colleges(name)')
-          .eq('id', applicationData.preferred_course)
-          .single();
-
-        if (courseError) {
-          console.error('Error fetching course data:', courseError);
-          throw new Error(`Failed to fetch course data: ${courseError.message}`);
-        }
-
-        // Get college name for the description
-        const { data: collegeData, error: collegeError } = await supabase
-          .from('colleges')
-          .select('name')
-          .eq('id', applicationData.preferred_college)
-          .single();
-
-        if (collegeError) {
-          console.error('Error fetching college data:', collegeError);
-          throw new Error(`Failed to fetch college data: ${collegeError.message}`);
-        }
-
-        // Extract the firstYear fee from the course fees
         let amount = 0;
-        if (courseData && courseData.fees) {
-          // Check if fees is a string that needs parsing
-          const fees = typeof courseData.fees === 'string'
-            ? JSON.parse(courseData.fees)
-            : courseData.fees;
+        let courseName = applicationData.preferred_course;
+        let collegeName = applicationData.preferred_college;
 
-          // Try to get firstYear fee, fallback to 0 if not found
-          amount = fees.firstYear || 0;
+        // Check if preferred_course and preferred_college are UUIDs or names
+        const isUuid = (str: string) => {
+          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          return uuidRegex.test(str);
+        };
+
+        // If preferred_course is a UUID, fetch course details
+        if (isUuid(applicationData.preferred_course)) {
+          try {
+            const { data: courseData, error: courseError } = await supabase
+              .from('courses')
+              .select('*, colleges(name)')
+              .eq('id', applicationData.preferred_course)
+              .single();
+
+            if (!courseError && courseData) {
+              courseName = courseData.course_name;
+
+              // Extract the firstYear fee from the course fees
+              if (courseData.fees) {
+                // Check if fees is a string that needs parsing
+                const fees = typeof courseData.fees === 'string'
+                  ? JSON.parse(courseData.fees)
+                  : courseData.fees;
+
+                // Try to get firstYear fee, fallback to 0 if not found
+                amount = fees.firstYear || 0;
+              }
+            }
+          } catch (error) {
+            console.error('Error fetching course by ID:', error);
+            // Continue with default values
+          }
+        } else {
+          // If preferred_course is a name, try to find the course by name
+          try {
+            const { data: courseData, error: courseError } = await supabase
+              .from('courses')
+              .select('*, colleges(name)')
+              .ilike('course_name', applicationData.preferred_course)
+              .limit(1)
+              .single();
+
+            if (!courseError && courseData) {
+              // Extract the firstYear fee from the course fees
+              if (courseData.fees) {
+                // Check if fees is a string that needs parsing
+                const fees = typeof courseData.fees === 'string'
+                  ? JSON.parse(courseData.fees)
+                  : courseData.fees;
+
+                // Try to get firstYear fee, fallback to 0 if not found
+                amount = fees.firstYear || 0;
+              }
+            }
+          } catch (error) {
+            console.error('Error fetching course by name:', error);
+            // Continue with default values
+          }
         }
 
-        // Get course name and college name for better description
-        const courseName = courseData ? courseData.course_name : applicationData.preferred_course;
-        const collegeName = collegeData ? collegeData.name : applicationData.preferred_college;
+        // If preferred_college is a UUID, fetch college details
+        if (isUuid(applicationData.preferred_college)) {
+          try {
+            const { data: collegeData, error: collegeError } = await supabase
+              .from('colleges')
+              .select('name')
+              .eq('id', applicationData.preferred_college)
+              .single();
+
+            if (!collegeError && collegeData) {
+              collegeName = collegeData.name;
+            }
+          } catch (error) {
+            console.error('Error fetching college by ID:', error);
+            // Continue with default values
+          }
+        }
 
         // Create a transaction for this completed application
         await createTransaction({
