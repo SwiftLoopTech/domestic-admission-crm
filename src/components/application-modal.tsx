@@ -100,11 +100,6 @@ export function ApplicationModal() {
     const selectedCollege = colleges.find((college) => college.id === data.college_id);
     const selectedCourse = courses.find((course) => course.id === data.course_id);
 
-    console.log("Selected College:", selectedCollege);
-    console.log("Selected Course:", selectedCourse);
-    console.log("College ID:", data.college_id);
-    console.log("Course ID:", data.course_id);
-
     const applicationData = {
       ...data,
       // Ensure both ID and name fields are set correctly
@@ -118,8 +113,7 @@ export function ApplicationModal() {
       application_status: APPLICATION_STATUS.PENDING,
     };
 
-    console.log("Application Data:", applicationData);
-
+/*     console.log("Application Data:", applicationData); */
     // Use the mutation to create the application
     createApplication(applicationData, {
       onSuccess: () => {
@@ -236,15 +230,18 @@ export function ApplicationModal() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="bg-white">
-                          {currentUserId && (
+                          {/* currentUserId && (
                             <SelectItem value={currentUserId}>Assign to myself</SelectItem>
-                          )}
+                          ) */}
                           {subagents.map((subagent) => (
                             <SelectItem
                               key={subagent.user_id}
                               value={subagent.user_id}
                             >
-                              {subagent.name}
+                              {subagent.user_id === currentUserId 
+                              ? "Assign to myself"
+                              :subagent.name
+                              }
                             </SelectItem>
                           ))}
                         </SelectContent>
