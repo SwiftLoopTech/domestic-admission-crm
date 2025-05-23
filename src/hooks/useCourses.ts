@@ -3,7 +3,6 @@ import { courseService } from '@/services/courses';
 import { Database } from '@/types/supabase';
 import { toast } from 'sonner';
 
-type Course = Database['public']['Tables']['courses']['Row'];
 type CreateCourseInput = Database['public']['Tables']['courses']['Insert'];
 
 export const useCourses = (filters?: {
@@ -15,8 +14,8 @@ export const useCourses = (filters?: {
   return useQuery({
     queryKey: ['courses', filters],
     queryFn: async () => {
-      const { data, count } = await courseService.getCourses(filters);
-      return { courses: data, total: count };
+      const result = await courseService.getCourses(filters);
+      return { courses: result?.data || [], total: result?.count || 0 };
     },
   });
 };
@@ -59,12 +58,12 @@ export const useUpdateCourse = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ 
-      id, 
-      data 
-    }: { 
-      id: string; 
-      data: Partial<CreateCourseInput> 
+    mutationFn: async ({
+      id,
+      data
+    }: {
+      id: string;
+      data: Partial<CreateCourseInput>
     }) => {
       return await courseService.updateCourse(id, data);
     },

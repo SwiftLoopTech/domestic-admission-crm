@@ -209,6 +209,144 @@ export type Database = {
           },
         ]
       }
+      transactions: {
+        Row: {
+          id: string
+          created_at: string
+          updated_at: string
+          application_id: string
+          student_name: string
+          amount: number
+          transaction_status: string
+          subagent_id: string | null
+          agent_id: string
+          completed_at: string | null
+          description: string | null
+          notes: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          application_id: string
+          student_name: string
+          amount: number
+          transaction_status: string
+          subagent_id?: string | null
+          agent_id: string
+          completed_at?: string | null
+          description?: string | null
+          notes?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          application_id?: string
+          student_name?: string
+          amount?: number
+          transaction_status?: string
+          subagent_id?: string | null
+          agent_id?: string
+          completed_at?: string | null
+          description?: string | null
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "transactions_subagent_id_fkey"
+            columns: ["subagent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["user_id"]
+          }
+        ]
+      }
+      commissions: {
+        Row: {
+          id: string
+          created_at: string
+          updated_at: string
+          application_id: string
+          transaction_id: string
+          amount: number
+          payment_status: string
+          agent_id: string
+          subagent_id: string
+          payment_completed_at: string | null
+          notes: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          application_id: string
+          transaction_id: string
+          amount: number
+          payment_status?: string
+          agent_id: string
+          subagent_id: string
+          payment_completed_at?: string | null
+          notes?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          application_id?: string
+          transaction_id?: string
+          amount?: number
+          payment_status?: string
+          agent_id?: string
+          subagent_id?: string
+          payment_completed_at?: string | null
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commissions_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commissions_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commissions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "commissions_subagent_id_fkey"
+            columns: ["subagent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["user_id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

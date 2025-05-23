@@ -45,7 +45,7 @@ export default function SubagentsPage() {
   return (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Subagents</h1>
+        <h1 className="text-3xl font-medium">Associate Partners</h1>
         <SubagentModal onSubagentCreated={handleSubagentCreated} />
       </div>
 
@@ -53,14 +53,14 @@ export default function SubagentsPage() {
         <Card>
           <CardContent className="pt-6">
             <p className="text-center text-muted-foreground">
-              No subagents found. Add your first subagent to get started.
+              No associate partners found. Add your first associate partner to get started.
             </p>
           </CardContent>
         </Card>
       ) : (
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="text-zinc-600 font-light !border-b-0">
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Created</TableHead>
@@ -68,10 +68,10 @@ export default function SubagentsPage() {
           </TableHeader>
           <TableBody>
             {subagents.map((subagent) => (
-              <TableRow key={subagent.user_id}>
+              <TableRow key={subagent.user_id} className="border-b-0 !mb-6">
                 <TableCell className="font-medium">{subagent.name}</TableCell>
-                <TableCell>{subagent.email}</TableCell>
-                <TableCell>
+                <TableCell className="text-zinc-800">{subagent.email}</TableCell>
+                <TableCell className="text-zinc-800">
                   {subagent.created_at
                     ? format(new Date(subagent.created_at), "MMM d, yyyy")
                     : "N/A"}

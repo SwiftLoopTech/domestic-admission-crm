@@ -1,22 +1,22 @@
 "use client"
 
 import { useState } from "react"
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogDescription,
   DialogFooter,
   DialogTrigger
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { FileUpload } from "@/components/colleges/file-upload"
-import { 
-  UploadIcon, 
-  DownloadIcon, 
-  FileText, 
-  CheckCircle2, 
+import {
+  UploadIcon,
+  DownloadIcon,
+  FileText,
+  CheckCircle2,
   AlertCircle,
   ArrowRight,
   Building2
@@ -37,6 +37,26 @@ interface ValidationResult {
   invalidRows: any[];
 }
 
+// Helper function to calculate duration years based on fee data
+const calculateDurationYears = (row: any): number => {
+  // Check each year's fee field, starting from 1ST YR
+  const yearFields = ["1ST YR", "2ND YR", "3RD YR", "4TH YR"];
+  let yearsWithFees = 0;
+
+  for (const field of yearFields) {
+    const fee = parseFloat(row[field] || "0");
+    if (fee > 0) {
+      yearsWithFees++;
+    } else {
+      // Stop counting when we find a year with no fee
+      break;
+    }
+  }
+
+  // Return the number of years with fees, or at least 1 if no fees were found
+  return yearsWithFees > 0 ? yearsWithFees : 1;
+}
+
 export function BulkUploadCoursesModal() {
   const [open, setOpen] = useState(false)
   const [file, setFile] = useState<File | null>(null)
@@ -55,12 +75,12 @@ export function BulkUploadCoursesModal() {
   const validateAndProcessData = async (data: any[]) => {
     try {
       setIsProcessing(true)
-      
+
       const validRows = data.filter(row => validateCsvRow(row))
-      
-     
+
+
       const invalidRows = validRows.filter(row => !row.COURSE || !row.COLLEGE || !row.PLACE)
-      
+
       if (invalidRows.length > 0) {
         setError(`${invalidRows.length} rows are missing required fields (COURSE, COLLEGE, or PLACE)`)
         setParsedData([])
@@ -119,11 +139,11 @@ export function BulkUploadCoursesModal() {
     const headers = "SLNO,COURSE,COLLEGE,PLACE,TOTAL FEE,1ST YR,2ND YR,3RD YR,4TH YR,HOSTEL/FOOD\n";
     const sampleRow = "1,Computer Science,Harvard University,Cambridge,400000,100000,100000,100000,100000,80000\n";
     const emptyRows = Array.from({ length: 10 }, (_, i) => `${i + 2},,,,,,,,,\n`).join('');
-    
+
     const csvContent = headers + sampleRow + emptyRows;
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    
+
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
     link.setAttribute('download', 'courses_upload_template.csv');
@@ -144,12 +164,12 @@ export function BulkUploadCoursesModal() {
     try {
       setIsProcessing(true)
 
-      // First create any new colleges
+      // First create any new colleges and wait for them to complete
       if (validation?.newColleges.length) {
-        for (const college of validation.newColleges) { 
+        const collegeCreationPromises = validation.newColleges.map(college =>
           addCollegeMutation.mutateAsync({
-            brochureFile:null,
-            collegeData:{
+            brochureFile: null,
+            collegeData: {
               name: college.name,
               location: college.place,
               website_url: null,
@@ -158,10 +178,14 @@ export function BulkUploadCoursesModal() {
               brochure_url: null,
             }
           })
-          
-        }
+        );
+
+        // Wait for all colleges to be created before proceeding
+        await Promise.all(collegeCreationPromises);
+
+        // Add a small delay to ensure database consistency
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
-      
 
       // Map CSV data to course objects
       const courses: CreateCourseInput[] = await Promise.all(
@@ -170,13 +194,20 @@ export function BulkUploadCoursesModal() {
           const college = await collegeService.getCollegeByNameAndPlace(
             row.COLLEGE.trim(),
             row.PLACE.trim()
-          )
-          console.log(college)
+          );
+
+          if (!college) {
+            throw new Error(`College not found: ${row.COLLEGE.trim()} - ${row.PLACE.trim()}`);
+          }
+
+          // Calculate duration years based on fee data
+          const durationYears = calculateDurationYears(row);
+
           return {
             slno: row.SLNO?.toString() || "",
             course_name: row.COURSE?.toString() || "",
-            college_id: college?.id || "",
-            duration_years: 4, // Default value
+            college_id: college.id,
+            duration_years: durationYears, // Use calculated value
             fees: {
               total: parseFloat(row["TOTAL FEE"] || "0"),
               firstYear: parseFloat(row["1ST YR"] || "0"),
@@ -191,10 +222,8 @@ export function BulkUploadCoursesModal() {
         })
       )
 
-      
       await bulkAddMutation.mutateAsync(courses)
-      
-      
+
       setFile(null)
       setParsedData([])
       setError(null)
@@ -202,9 +231,10 @@ export function BulkUploadCoursesModal() {
       setOpen(false)
 
       toast.success(`Successfully uploaded ${courses.length} courses`)
-    } catch (err) {
-      setError("Failed to process the data. Please try again.")
-      toast.error("Failed to process the data")
+    } catch (err: any) {
+      console.error("Error in bulk upload:", err);
+      setError(`Failed to process the data: ${err.message || "Unknown error"}`)
+      toast.error(`Failed to process the data: ${err.message || "Unknown error"}`)
     } finally {
       setIsProcessing(false)
     }
@@ -213,16 +243,16 @@ export function BulkUploadCoursesModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button 
+        <Button
           variant="outline"
-          className="bg-teal-50 hover:bg-teal-100 border-teal-200 text-teal-700"
+          className="bg-white hover:bg-amber-500"
         >
           <UploadIcon className="mr-2 h-4 w-4" />
           Bulk Upload Courses
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[550px] bg-white p-0 gap-0 border-none">
-        <DialogHeader className="bg-gradient-to-r from-teal-500 to-cyan-600 p-6 rounded-t-lg">
+        <DialogHeader className="bg-[#222B38] p-6 rounded-t-lg">
           <DialogTitle className="text-white flex items-center gap-2">
             <FileText className="h-5 w-5" />
             Bulk Upload Courses
@@ -231,7 +261,7 @@ export function BulkUploadCoursesModal() {
             Upload your course information using our CSV template
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="p-6 space-y-4">
           {/* Template Download Section */}
           <div className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-xl p-5 border border-teal-100">
@@ -244,8 +274,8 @@ export function BulkUploadCoursesModal() {
                 <p className="text-sm text-teal-700">
                   Use our pre-formatted CSV template for accurate data upload
                 </p>
-                <Button 
-                  type="button" 
+                <Button
+                  type="button"
                   onClick={handleDownloadTemplate}
                   className="bg-white hover:bg-teal-50 text-teal-700 border-teal-200 mt-2"
                 >
@@ -267,18 +297,18 @@ export function BulkUploadCoursesModal() {
                 <p className="text-sm text-blue-700">
                   Select your completed CSV file to import courses
                 </p>
-                <FileUpload 
+                <FileUpload
                   onFileChange={handleFileChange}
                   onCsvParse={handleCsvParse}
-                  label="Choose CSV file" 
-                  accept=".csv" 
+                  label="Choose CSV file"
+                  accept=".csv"
                   maxSize={10}
                   isCsv={true}
                 />
               </div>
             </div>
           </div>
-          
+
           {/* Validation Results */}
           {validation && (
             <div className="space-y-3">
@@ -290,7 +320,7 @@ export function BulkUploadCoursesModal() {
                       <p className="text-sm font-medium text-blue-800">
                         Existing Colleges Found ({validation.existingColleges.length})
                       </p>
-                      
+
                     </div>
                   </div>
                 </div>
@@ -344,22 +374,22 @@ export function BulkUploadCoursesModal() {
             </div>
           )}
         </div>
-        
+
         <DialogFooter className="p-6 bg-gray-50 rounded-b-lg">
-          <Button 
-            type="button" 
-            variant="outline" 
+          <Button
+            type="button"
+            variant="outline"
             onClick={() => setOpen(false)}
             className="border-gray-300"
             disabled={isProcessing}
           >
             Cancel
           </Button>
-          <Button 
-            type="button" 
+          <Button
+            type="button"
             onClick={handleSubmit}
             disabled={parsedData.length === 0 || isProcessing || bulkAddMutation.isPending}
-            className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white hover:from-teal-600 hover:to-cyan-700"
+            className="bg-[#FFC11F] hover:bg-[#FFC11F] text-black border-[#FFC11F]"
           >
             {isProcessing || bulkAddMutation.isPending ? (
               <>

@@ -1,7 +1,9 @@
-@import "tailwindcss" layer(base);
-@import "tw-animate-css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* Base styles */
+
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -66,8 +68,6 @@
   }
 }
 
-
-/* Utilities */
 @layer utilities {
   /* Add any utility classes here */
 }

@@ -91,8 +91,6 @@ export function ApplicationStatusDropdown({
       newStatus
     }, {
       onSuccess: (data) => {
-        console.log('Status update successful:', data);
-        toast.success(`Status updated to ${newStatus}`);
         setOpen(false);
       },
       onError: (error) => {

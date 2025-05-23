@@ -35,7 +35,26 @@ type College = Database['public']['Tables']['colleges']['Row'];
 const formSchema = z.object({
   name: z.string().min(2, "College name must be at least 2 characters"),
   location: z.string().min(2, "Location is required"),
-  website_url: z.string().url("Please enter a valid URL").nullable(),
+  website_url: z.string()
+    .transform((val) => {
+      if (!val) return null;
+      val = val.trim();
+      if (!val) return null;
+      if (!val.match(/^https?:\/\//i)) {
+        return `https://${val}`;
+      }
+      return val;
+    })
+    .refine((val) => {
+      if (!val) return true; // Allow null values
+      try {
+        new URL(val);
+        return true;
+      } catch {
+        return false;
+      }
+    }, "Please enter a valid website address")
+    .nullable(),
   contact_number: z.string().min(10, "Contact number must be at least 10 digits").nullable(),
   agent_id: z.string().nullable(),
   brochure_url: z.string().nullable(),
@@ -99,8 +118,8 @@ export function AddCollegeModal(){
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-indigo-600 text-white">
-          <PlusIcon className="mr-2 h-4 w-4" />
+        <Button className="bg-[#FFC11F] text-black">
+          <PlusIcon className="h-4 w-4" />
           Add College
         </Button>
       </DialogTrigger>
@@ -126,7 +145,7 @@ export function AddCollegeModal(){
                   Institution Details
                 </h3>
 
-                <div className="space-y-4">
+                <div className="space-y-4 w-full flex items-start gap-4 flex-col sm:flex-row">
                   <FormField
                     control={form.control}
                     name="name"
@@ -192,10 +211,15 @@ export function AddCollegeModal(){
                         <FormLabel>Website URL</FormLabel>
                         <FormControl>
                           <Input
-                            type="url"
-                            placeholder="https://example.edu"
+                            type="text"
+                            placeholder="example.edu or https://example.edu"
                             {...field}
                             value={field.value || ''}
+                            onChange={(e) => {
+                              let value = e.target.value;
+                              value = value.replace(/^https?:\/\//i, '');
+                              field.onChange(value);
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
