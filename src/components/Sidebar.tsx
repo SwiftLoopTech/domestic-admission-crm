@@ -92,11 +92,11 @@ export function Sidebar({ userRole }: SidebarProps) {
       },
     ];
 
-    // Items only for agents (not sub-agents)
+    // Items only for Partners (not associate partners)
     const agentOnlyItems = [
       {
-        name: "Sub-Agents",
-        href: "/dashboard/sub-agents",
+        name: "Associate Partners",
+        href: "/dashboard/associate-partners",
         icon: LucideUserPlus
       },
     ];
@@ -135,7 +135,7 @@ export function Sidebar({ userRole }: SidebarProps) {
               {userName}
             </span>
             <span className="text-xs text-teal-50">
-              {userRole === "agent" ? "Agent" : "Sub-Agent"}
+              {userRole === "agent" ? "Partner" : "Associate Partner"}
             </span>
           </div>
         </div>

@@ -39,12 +39,12 @@ export async function createTransaction(data: TransactionInput) {
       .single();
 
     if (agentError) {
-      console.error('Error fetching agent data:', agentError);
-      throw new Error(`Failed to fetch agent data: ${agentError.message}`);
+      console.error('Error fetching Partner data:', agentError);
+      throw new Error(`Failed to fetch Partner data: ${agentError.message}`);
     }
 
     if (!agentData) {
-      throw new Error("No agent record found for this user");
+      throw new Error("No Partner record found for this user");
     }
 
     // Determine the superagent ID (for partitioning)
@@ -121,14 +121,14 @@ export async function updateTransactionStatus({
       .single();
 
     if (agentError) {
-      console.error('Error fetching agent data:', agentError);
-      throw new Error(`Failed to fetch agent data: ${agentError.message}`);
+      console.error('Error fetching Partner data:', agentError);
+      throw new Error(`Failed to fetch Partner data: ${agentError.message}`);
     }
 
     // Only agents can update transaction status
     const isAgent = agentData.super_agent === null;
     if (!isAgent) {
-      throw new Error("Only agents can update transaction status");
+      throw new Error("Only Partners can update transaction status");
     }
 
     // Prepare update data
@@ -294,7 +294,7 @@ export async function getTransactions() {
       .single();
 
     if (agentError) {
-      throw new Error(`Failed to fetch agent data: ${agentError.message}`);
+      throw new Error(`Failed to fetch Partner data: ${agentError.message}`);
     }
 
     // Determine if this is a main agent or subagent

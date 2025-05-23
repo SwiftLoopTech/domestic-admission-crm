@@ -34,7 +34,7 @@ export function ConfirmStatusDialog({
     description = 
       "Are you sure you want to mark documents as uploaded? " +
       "No additional documents can be uploaded after this status change " +
-      "unless an agent reverts the status back to Verified.";
+      "unless the partner reverts the status back to Verified.";
   } else if (status === APPLICATION_STATUS.REJECTED) {
     title = "Confirm Rejection";
     description = "Are you sure you want to reject this application?";

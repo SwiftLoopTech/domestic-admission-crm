@@ -9,6 +9,7 @@ import { useAgentData } from "@/hooks/useAgentData";
 import { SelectContent, SelectTrigger, Select, SelectItem, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { ArrowBigLeft, ChevronRight, GraduationCap, SearchIcon } from "lucide-react";
+import Link from "next/link";
 
 export default function DashboardPage() {
   const { userRole, isLoading: isLoadingRole, error: roleError } = useUserRole();
@@ -43,7 +44,7 @@ export default function DashboardPage() {
 
       {userRole === "agent" ? (
         <div>
-          <p className="mb-9 ">Welcome to your agent dashboard.</p>
+          <p className="mb-9 ">Welcome to the Partner dashboard.</p>
           {/* Agent-specific content */}
 
           {/* Filters */}
@@ -61,7 +62,7 @@ export default function DashboardPage() {
             </Select>
             <Select>
               <SelectTrigger className="border-zinc-400 hover:bg-zinc-200 transition focus-visible:ring-0">
-                <SelectValue placeholder="Sub Agent" />
+                <SelectValue placeholder="Associate Partner" />
               </SelectTrigger>
               <SelectContent className="bg-white border-zinc-300">
                 <SelectItem value="college1" className="hover:bg-zinc-200">College 1</SelectItem>
@@ -109,7 +110,7 @@ export default function DashboardPage() {
             </Card>
             <Card className="gap-3 h-fit w-2xs border-zinc-400 shadow-md hover:shadow-xl transition duration-200">
               <CardHeader className="">
-                <CardTitle className="text-sm text-zinc-700 font-medium">Sub-Agents</CardTitle>
+                <CardTitle className="text-sm text-zinc-700 font-medium">Associate Partners</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-4xl font-medium">{stats.subagentsCount}</p>
@@ -156,37 +157,26 @@ export default function DashboardPage() {
               <div className="bg-[#FFC11F44] w-fit p-2 rounded-lg text-[#FFC11F]">
                 <SearchIcon width={24} height={24} />
               </div>
-              <h6 className="text-xl mt-3 hover:underline cursor-pointer flex gap-1 items-start">Search Collges <ChevronRight width={20} /></h6>
+              <Link href={"/dashboard/colleges"} className="text-xl mt-3 hover:underline cursor-pointer flex gap-1 items-start">Search Colleges <ChevronRight width={20} /></Link>
               <p className="text-sm mt-2 text-zinc-600">Explore colleges accepting applications through the platform. Filter courses, bulk upload courses and enrol new colleges.</p>
             </div>
             <div className="w-xs mt-12">
               <div className="bg-[#FFC11F44] w-fit p-2 rounded-lg text-[#FFC11F]">
                 <GraduationCap width={24} height={24} />
               </div>
-              <h6 className="text-xl mt-3 hover:underline cursor-pointer flex gap-1 items-start">Students<ChevronRight width={20} /></h6>
+              <Link href="/dashboard/applications" className="text-xl mt-3 hover:underline cursor-pointer flex gap-1 items-start">Students<ChevronRight width={20} /></Link>
               <p className="text-sm mt-2 text-zinc-600">Explore students applying through the platform.</p>
             </div>
           </div>
         </div>
       ) : (
         <div>
-          <p className="mb-9">Welcome to your sub-agent dashboard.</p>
+          <p className="mb-9">Welcome to the Associate Partner dashboard.</p>
           {/* Sub-agent-specific content */}
           <div className="flex gap-4 mb-6">
             <Select>
               <SelectTrigger className="border-zinc-400 hover:bg-zinc-200 transition focus-visible:ring-0">
                 <SelectValue placeholder="Select a college" />
-              </SelectTrigger>
-              <SelectContent className="bg-white border-zinc-300">
-                <SelectItem value="college1" className="hover:bg-zinc-200">College 1</SelectItem>
-                <SelectItem value="college2" className="hover:bg-zinc-200">College 2</SelectItem>
-                <SelectItem value="college3" className="hover:bg-zinc-200">College 3</SelectItem>
-                <SelectItem value="college4" className="hover:bg-zinc-200">College 4</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select>
-              <SelectTrigger className="border-zinc-400 hover:bg-zinc-200 transition focus-visible:ring-0">
-                <SelectValue placeholder="Sub Agent" />
               </SelectTrigger>
               <SelectContent className="bg-white border-zinc-300">
                 <SelectItem value="college1" className="hover:bg-zinc-200">College 1</SelectItem>

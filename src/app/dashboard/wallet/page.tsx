@@ -154,7 +154,7 @@ export default function WalletPage() {
           <CardTitle>Transactions</CardTitle>
           <CardDescription>
             {isAgent
-              ? "All transactions from your students and sub-agents"
+              ? "All transactions from your students and Associate Partners"
               : "Your transactions"}
           </CardDescription>
         </CardHeader>
@@ -166,7 +166,7 @@ export default function WalletPage() {
                 <TableHead>Student</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Status</TableHead>
-                {isAgent && <TableHead>Sub-Agent</TableHead>}
+                {isAgent && <TableHead>Associate Partner</TableHead>}
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -253,7 +253,7 @@ export default function WalletPage() {
                   {isAgent && selectedTransaction.subagent_id && (
                     <div>
                       <h3 className="text-sm font-medium text-gray-500 flex items-center">
-                        <User className="h-4 w-4 mr-1" /> Sub-Agent
+                        <User className="h-4 w-4 mr-1" /> Associate Partner
                       </h3>
                       <p>{getSubagentName(selectedTransaction.subagent_id)}</p>
                     </div>

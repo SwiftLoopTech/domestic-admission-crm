@@ -83,7 +83,7 @@ export function ApplicationDetailsDialog({
   // Handle saving student details
   const handleSaveStudentDetails = () => {
     if (!isAgent || isCompleted) {
-      toast.error(isCompleted ? "Completed applications cannot be edited" : "Only agents can edit student details");
+      toast.error(isCompleted ? "Completed applications cannot be edited" : "Only Partners can edit student details");
       return;
     }
 
@@ -111,7 +111,7 @@ export function ApplicationDetailsDialog({
   // Handle saving college information
   const handleSaveCollegeInfo = () => {
     if (!isAgent || isCompleted) {
-      toast.error(isCompleted ? "Completed applications cannot be edited" : "Only agents can edit college information");
+      toast.error(isCompleted ? "Completed applications cannot be edited" : "Only Partners can edit college information");
       return;
     }
 

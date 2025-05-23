@@ -45,7 +45,7 @@ export default function SubagentsPage() {
   return (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-medium">Subagents</h1>
+        <h1 className="text-3xl font-medium">Associate Partners</h1>
         <SubagentModal onSubagentCreated={handleSubagentCreated} />
       </div>
 
@@ -53,7 +53,7 @@ export default function SubagentsPage() {
         <Card>
           <CardContent className="pt-6">
             <p className="text-center text-muted-foreground">
-              No subagents found. Add your first subagent to get started.
+              No associate partners found. Add your first associate partner to get started.
             </p>
           </CardContent>
         </Card>

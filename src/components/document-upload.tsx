@@ -277,7 +277,7 @@ export function DocumentUpload({
       {!canUploadDocuments && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-sm text-yellow-800">
           Documents can only be uploaded when the application status is Verified.
-          {!isAgent && " Only agents can upload documents in other statuses."}
+          {!isAgent && " Only Partners can upload documents in other statuses."}
         </div>
       )}
 

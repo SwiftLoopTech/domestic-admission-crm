@@ -106,12 +106,10 @@ export function ApplicationModal() {
     if (userRole === "sub-agent") {
       // If the user is a subagent, always set subagent_id to their own ID
       subagentId = currentUserId;
-      console.log("Setting subagent_id to current user (subagent):", subagentId);
     } else if (userRole === "agent") {
       // If the user is an agent, use the selected subagent_id
       // If they selected their own ID, use that
       subagentId = data.subagent_id;
-      console.log("Agent selected subagent_id:", subagentId);
     }
 
     const applicationData = {
@@ -234,14 +232,14 @@ export function ApplicationModal() {
                   name="subagent_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Assign to Sub-Agent</FormLabel>
+                      <FormLabel>Assign to Associate Partner</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value || ""}
                       >
                         <FormControl>
                           <SelectTrigger className="border-zinc-500">
-                            <SelectValue placeholder="Select sub-agent" />
+                            <SelectValue placeholder="Select Associate Partner" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="bg-white">

@@ -184,7 +184,7 @@ export default function CommissionsPage() {
           <CardTitle>Commissions</CardTitle>
           <CardDescription>
             {isAgent
-              ? "Commissions for your subagents"
+              ? "Commissions for your Associate Partners"
               : "Your commissions from completed transactions"}
           </CardDescription>
         </CardHeader>
@@ -197,7 +197,7 @@ export default function CommissionsPage() {
                 <TableHead>Transaction Amount</TableHead>
                 <TableHead>Commission Amount</TableHead>
                 <TableHead>Status</TableHead>
-                {isAgent && <TableHead>Sub-Agent</TableHead>}
+                {isAgent && <TableHead>Associate Partner</TableHead>}
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>

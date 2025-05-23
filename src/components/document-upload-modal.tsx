@@ -89,7 +89,7 @@ export function DocumentUploadModal({
                 {isCompleted
                   ? "This application is completed. Documents cannot be modified."
                   : isDocumentsUploaded
-                    ? "Documents have already been uploaded. Contact an agent to make changes."
+                    ? "Documents have already been uploaded. Contact your Partner to make changes."
                     : "You don't have permission to upload documents for this application."}
               </div>
             </div>

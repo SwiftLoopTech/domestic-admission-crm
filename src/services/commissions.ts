@@ -39,14 +39,14 @@ export async function createCommission(data: CommissionInput) {
       .single();
 
     if (agentError) {
-      console.error('Error fetching agent data:', agentError);
-      throw new Error(`Failed to fetch agent data: ${agentError.message}`);
+      console.error('Error fetching Partner data:', agentError);
+      throw new Error(`Failed to fetch Partner data: ${agentError.message}`);
     }
 
     // Only agents can create commissions
     const isAgent = agentData.super_agent === null;
     if (!isAgent) {
-      throw new Error("Only agents can create commission records");
+      throw new Error("Only Partners can create commission records");
     }
 
     // Create the commission data object
@@ -117,7 +117,7 @@ export async function updateCommissionStatus({
     // Only agents can update commission status
     const isAgent = agentData.super_agent === null;
     if (!isAgent) {
-      throw new Error("Only agents can update commission payment status");
+      throw new Error("Only Partners can update commission payment status");
     }
 
     // Prepare update data
@@ -176,14 +176,14 @@ export async function updateCommission(commissionId: string, data: CommissionUpd
       .single();
 
     if (agentError) {
-      console.error('Error fetching agent data:', agentError);
-      throw new Error(`Failed to fetch agent data: ${agentError.message}`);
+      console.error('Error fetching Partner data:', agentError);
+      throw new Error(`Failed to fetch Partner data: ${agentError.message}`);
     }
 
     // Only agents can update commission details
     const isAgent = agentData.super_agent === null;
     if (!isAgent) {
-      throw new Error("Only agents can update commission details");
+      throw new Error("Only Partners can update commission details");
     }
 
     // Update the commission
@@ -231,7 +231,7 @@ export async function getCommissions() {
       .single();
 
     if (agentError) {
-      throw new Error(`Failed to fetch agent data: ${agentError.message}`);
+      throw new Error(`Failed to fetch Partner data: ${agentError.message}`);
     }
 
     // Determine if this is a main agent or subagent

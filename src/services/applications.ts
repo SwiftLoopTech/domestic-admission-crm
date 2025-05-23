@@ -45,12 +45,12 @@ export async function createApplication(data: ApplicationInput) {
       .single();
 
     if (agentError) {
-      console.error('Error fetching agent data:', agentError);
-      throw new Error(`Failed to fetch agent data: ${agentError.message}`);
+      console.error('Error fetching Partner data:', agentError);
+      throw new Error(`Failed to fetch Partner data: ${agentError.message}`);
     }
 
     if (!agentData) {
-      throw new Error("No agent record found for this user");
+      throw new Error("No Partner record found for this user");
     }
 
     // Determine which partition to insert into based on the hierarchy
@@ -65,8 +65,6 @@ export async function createApplication(data: ApplicationInput) {
     }
 
     // Instead of using partitioned tables, let's use a simpler approach for now
-    // We'll use a single applications table with a superagent_id column
-    console.log('Using main applications table with superagent_id:', superAgentId);
 
     // Create the application data object
     const applicationData = {
@@ -132,12 +130,9 @@ export async function updateApplicationStatus(applicationId: string, newStatus: 
       .single();
 
     if (agentError) {
-      console.error('Error fetching agent data:', agentError);
-      throw new Error(`Failed to fetch agent data: ${agentError.message}`);
+      console.error('Error fetching Partner data:', agentError);
+      throw new Error(`Failed to fetch Partner data: ${agentError.message}`);
     }
-
-    const isAgent = agentData.super_agent === null;
-    console.log('User is:', isAgent ? 'agent' : 'subagent');
 
     // Get the application to check permissions
     const { data: applicationData, error: applicationError } = await supabase
@@ -257,9 +252,6 @@ export async function updateApplicationStatus(applicationId: string, newStatus: 
             // Continue with default values
           }
         }
-
-        // Log the application data to verify subagent_id
-        console.log('Creating/updating transaction for application with subagent_id:', applicationData.subagent_id);
 
         // Check if a transaction already exists for this application
         const { data: existingTransactions, error: transactionCheckError } = await supabase
@@ -482,7 +474,7 @@ export async function getApplications() {
     .single();
 
   if (agentError) {
-    throw new Error(`Failed to fetch agent data: ${agentError.message}`);
+    throw new Error(`Failed to fetch Partner data: ${agentError.message}`);
   }
 
   // Determine if this is a main agent or subagent

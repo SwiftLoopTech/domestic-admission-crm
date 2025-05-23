@@ -116,7 +116,7 @@ export default function ApplicationsPage() {
               <TableHead>College</TableHead>
               <TableHead>Course</TableHead>
               <TableHead>Status</TableHead>
-              {!isSubagent && <TableHead>Subagent</TableHead>}
+              {!isSubagent && <TableHead>Associate Partner</TableHead>}
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>

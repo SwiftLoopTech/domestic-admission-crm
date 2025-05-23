@@ -65,15 +65,15 @@ export function SubagentModal({ onSubagentCreated }: SubagentModalProps) {
       <DialogTrigger asChild>
         <Button className="bg-black text-white hover:cursor-pointer hover:shadow-md">
           <PlusCircle className="mr-2 h-4 w-4" />
-          Add Subagent
+          Add Associate Partner
         </Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add New Subagent</DialogTitle>
+          <DialogTitle>Add New Associate Partner</DialogTitle>
           <DialogDescription>
-            Fill in the form below to add a new subagent to your team.
+            Fill in the form below to add a new Associate Partner to your team.
           </DialogDescription>
         </DialogHeader>
 
@@ -88,7 +88,7 @@ export function SubagentModal({ onSubagentCreated }: SubagentModalProps) {
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter subagent's full name" {...field} />
+                      <Input placeholder="Enter name of Associate Partner" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -103,7 +103,7 @@ export function SubagentModal({ onSubagentCreated }: SubagentModalProps) {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="subagent@example.com" type="email" {...field} />
+                      <Input placeholder="asscpartner@example.com" type="email" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -122,7 +122,7 @@ export function SubagentModal({ onSubagentCreated }: SubagentModalProps) {
                     </FormControl>
                     <FormMessage />
                     <p className="text-xs text-muted-foreground">
-                      This password will be used for the subagent&apos;s login. They will need to confirm their email before logging in.
+                      This password will be used for the Associate Partner&apos;s login. They will need to confirm their email before logging in.
                     </p>
                   </FormItem>
                 )}
@@ -150,7 +150,7 @@ export function SubagentModal({ onSubagentCreated }: SubagentModalProps) {
                     Creating...
                   </>
                 ) : (
-                  "Create Subagent"
+                  "Create Associate Partner"
                 )}
               </Button>
             </DialogFooter>
