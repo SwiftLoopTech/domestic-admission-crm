@@ -1,9 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { 
-  getCounsellorColleges, 
-  getCounsellorCourses, 
+import {
+  getCounsellorColleges,
+  getCounsellorCourses,
   getCounsellorCollegeById,
   searchCounsellorColleges,
   searchCounsellorCourses
@@ -12,7 +12,7 @@ import {
 /**
  * Hook to fetch colleges for counsellors
  */
-export function useCounsellorColleges() {
+export function useCounsellorColleges(enabled: boolean = true) {
   const {
     data: colleges = [],
     isLoading,
@@ -21,6 +21,7 @@ export function useCounsellorColleges() {
   } = useQuery({
     queryKey: ["counsellor-colleges"],
     queryFn: getCounsellorColleges,
+    enabled: enabled,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 

@@ -5,6 +5,8 @@ import { getApplications } from "@/services/applications";
 import { getSubagents } from "@/services/agents";
 import { getCounsellors } from "@/services/counsellors";
 import { useUserRole } from "@/hooks/useUserRole";
+import { collegeService } from "@/services/colleges";
+import { getTransactions } from "@/services/transactions";
 
 export function useDashboardStats() {
   const { userRole } = useUserRole();
@@ -41,15 +43,50 @@ export function useDashboardStats() {
     enabled: userRole === "agent" || userRole === "sub-agent",
   });
 
+  // Fetch colleges
+  const {
+    data: collegesData,
+    isLoading: isLoadingColleges,
+    error: collegesError,
+  } = useQuery({
+    queryKey: ["colleges-stats"],
+    queryFn: async () => {
+      const { data, count } = await collegeService.getColleges();
+      return { colleges: data, total: count };
+    },
+  });
+
+  // Fetch transactions
+  const {
+    data: transactions = [],
+    isLoading: isLoadingTransactions,
+    error: transactionsError,
+  } = useQuery({
+    queryKey: ["transactions"],
+    queryFn: getTransactions,
+  });
+
   // Calculate stats
+  const completedApplications = applications.filter(app => app.application_status === 'completed');
+  const completedTransactions = transactions.filter(transaction => transaction.completed === true);
+  const pendingPayments = completedApplications.length - completedTransactions.length;
+
   const stats = {
     applicationsCount: applications.length,
     subagentsCount: subagents.length,
     counsellorsCount: counsellors.length,
+    collegesCount: collegesData?.total || 0,
+    paymentsCompleted: completedTransactions.length,
+    paymentsPending: Math.max(0, pendingPayments), // Ensure non-negative
   };
 
-  const isLoading = isLoadingApplications || (userRole === "agent" && isLoadingSubagents) || ((userRole === "agent" || userRole === "sub-agent") && isLoadingCounsellors);
-  const error = applicationsError || subagentsError || counsellorsError;
+  const isLoading = isLoadingApplications ||
+    (userRole === "agent" && isLoadingSubagents) ||
+    ((userRole === "agent" || userRole === "sub-agent") && isLoadingCounsellors) ||
+    isLoadingColleges ||
+    isLoadingTransactions;
+
+  const error = applicationsError || subagentsError || counsellorsError || collegesError || transactionsError;
 
   return {
     stats,

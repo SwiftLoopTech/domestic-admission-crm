@@ -54,7 +54,8 @@ export default function CollegesPage() {
     offset: (currentPage - 1) * pageSize
   });
 
-  const counsellorCollegesQuery = useCounsellorColleges();
+  // Only fetch counsellor data if user is actually a counsellor
+  const counsellorCollegesQuery = useCounsellorColleges(isCounsellor);
   const counsellorSearchQuery = useCounsellorCollegeSearch(debouncedSearchTerm, isCounsellor && debouncedSearchTerm.length > 0);
 
   // Select the appropriate data based on user role

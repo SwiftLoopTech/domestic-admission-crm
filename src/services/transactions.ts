@@ -286,51 +286,81 @@ export async function getTransactions() {
 
     const userId = session.user.id;
 
-    // Get the agent data
+    // First try to get agent data
     const { data: agentData, error: agentError } = await supabase
       .from('agents')
       .select('super_agent, user_id')
       .eq('user_id', userId)
       .single();
 
-    if (agentError) {
-      throw new Error(`Failed to fetch Partner data: ${agentError.message}`);
-    }
+    // If user is found in agents table
+    if (!agentError && agentData) {
+      let transactions = [];
 
-    // Determine if this is a main agent or subagent
-    let transactions = [];
+      if (agentData.super_agent === null) {
+        // This is a main agent - get all transactions where agent_id equals their user_id
+        const { data, error } = await supabase
+          .from('transactions')
+          .select('*, applications(*)')
+          .eq('agent_id', agentData.user_id)
+          .order('created_at', { ascending: false });
 
-    if (agentData.super_agent === null) {
-      // This is a main agent - get all transactions where agent_id equals their user_id
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('*, applications(*)')
-        .eq('agent_id', agentData.user_id)
-        .order('created_at', { ascending: false });
+        if (error) {
+          console.error('Error fetching transactions:', error);
+          throw new Error(`Failed to fetch transactions: ${error.message}`);
+        }
 
-      if (error) {
-        console.error('Error fetching transactions:', error);
-        throw new Error(`Failed to fetch transactions: ${error.message}`);
+        transactions = data || [];
+      } else {
+        // This is a subagent - get only transactions created by this subagent
+        const { data, error } = await supabase
+          .from('transactions')
+          .select('*, applications(*)')
+          .eq('subagent_id', agentData.user_id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching transactions:', error);
+          throw new Error(`Failed to fetch transactions: ${error.message}`);
+        }
+
+        transactions = data || [];
       }
 
-      transactions = data || [];
-    } else {
-      // This is a subagent - get only transactions created by this subagent
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('*, applications(*)')
-        .eq('subagent_id', agentData.user_id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching transactions:', error);
-        throw new Error(`Failed to fetch transactions: ${error.message}`);
-      }
-
-      transactions = data || [];
+      return transactions;
     }
 
-    return transactions;
+    // If not found in agents table, check if user is a counsellor
+    const { data: counsellorData, error: counsellorError } = await supabase
+      .from('counsellors')
+      .select('agent_id')
+      .eq('user_id', userId)
+      .single();
+
+    if (counsellorError) {
+      console.error('Error fetching counsellor data:', counsellorError);
+      throw new Error(`Failed to fetch user data: ${counsellorError.message}`);
+    }
+
+    if (!counsellorData) {
+      throw new Error("No user record found in agents or counsellors table");
+    }
+
+    // For counsellors, get transactions from their associated agent
+    // but only for applications assigned to this counsellor
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('*, applications!inner(*)')
+      .eq('agent_id', counsellorData.agent_id)
+      .eq('applications.counsellor_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching counsellor transactions:', error);
+      throw new Error(`Failed to fetch transactions: ${error.message}`);
+    }
+
+    return data || [];
   } catch (error: any) {
     console.error('Error in getTransactions:', error);
     throw error;

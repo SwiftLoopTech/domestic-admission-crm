@@ -123,7 +123,7 @@ export default function DashboardPage() {
                 <CardTitle className="text-sm text-zinc-700 font-medium">Colleges</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-4xl font-medium">4</p>
+                <p className="text-4xl font-medium">{stats.collegesCount}</p>
               </CardContent>
             </Card>
             <Card className="gap-3 h-fit w-2xs border-zinc-400 shadow-md hover:shadow-xl transition duration-200">
@@ -136,18 +136,18 @@ export default function DashboardPage() {
             </Card>
             <Card className="gap-3 h-fit w-2xs border-zinc-400 shadow-md hover:shadow-xl transition duration-200">
               <CardHeader className="">
-                <CardTitle className="text-sm text-zinc-700 font-medium">Payments</CardTitle>
+                <CardTitle className="text-sm text-zinc-700 font-medium">Payments Completed</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-4xl font-medium">8</p>
+                <p className="text-4xl font-medium">{stats.paymentsCompleted}</p>
               </CardContent>
             </Card>
             <Card className="gap-3 h-fit w-2xs border-zinc-400 shadow-md hover:shadow-xl transition duration-200">
               <CardHeader className="">
-                <CardTitle className="text-sm text-zinc-700 font-medium">Non-Enrolments</CardTitle>
+                <CardTitle className="text-sm text-zinc-700 font-medium">Payments Pending</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-4xl font-medium">2</p>
+                <p className="text-4xl font-medium">{stats.paymentsPending}</p>
               </CardContent>
             </Card>
 
@@ -227,7 +227,7 @@ export default function DashboardPage() {
                 <CardTitle className="text-sm text-zinc-700 font-medium">Colleges</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-4xl font-medium">4</p>
+                <p className="text-4xl font-medium">{stats.collegesCount}</p>
               </CardContent>
             </Card>
             <Card className="gap-3 h-fit w-2xs border-zinc-400 shadow-md hover:shadow-xl transition duration-200">
@@ -240,18 +240,18 @@ export default function DashboardPage() {
             </Card>
             <Card className="gap-3 h-fit w-2xs border-zinc-400 shadow-md hover:shadow-xl transition duration-200">
               <CardHeader className="">
-                <CardTitle className="text-sm text-zinc-700 font-medium">Payments</CardTitle>
+                <CardTitle className="text-sm text-zinc-700 font-medium">Payments Completed</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-4xl font-medium">8</p>
+                <p className="text-4xl font-medium">{stats.paymentsCompleted}</p>
               </CardContent>
             </Card>
             <Card className="gap-3 h-fit w-2xs border-zinc-400 shadow-md hover:shadow-xl transition duration-200">
               <CardHeader className="">
-                <CardTitle className="text-sm text-zinc-700 font-medium">Non-Enrolments</CardTitle>
+                <CardTitle className="text-sm text-zinc-700 font-medium">Payments Pending</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-4xl font-medium">2</p>
+                <p className="text-4xl font-medium">{stats.paymentsPending}</p>
               </CardContent>
             </Card>
           </div>
@@ -290,7 +290,7 @@ export default function DashboardPage() {
                 <CardTitle className="text-sm text-zinc-700 font-medium">Colleges</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-4xl font-medium">4</p>
+                <p className="text-4xl font-medium">{stats.collegesCount}</p>
               </CardContent>
             </Card>
           </div>
