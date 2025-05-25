@@ -60,7 +60,7 @@ export default function CommissionsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCommission, setSelectedCommission] = useState<any>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const { getSubagentName, isLoading: isLoadingSubagents } = useSubagentNames();
+  const { getSubagentName, isLoading: isLoadingSubagents } = useSubagentNames(userRole !== "counsellor");
 
   // Filter completed transactions only
   const completedTransactions = transactions.filter(

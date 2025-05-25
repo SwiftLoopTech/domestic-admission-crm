@@ -17,6 +17,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSubagents } from "@/hooks/useSubagents";
 import { useApplications } from "@/hooks/useApplications";
+import { useCounsellors } from "@/hooks/useCounsellors";
 import { getCurrentUserId } from "@/utils/agents.supabase";
 import { APPLICATION_STATUS } from "@/utils/application-status";
 import { useColleges } from "@/hooks/useColleges";
@@ -35,6 +36,7 @@ const applicationSchema = z.object({
   course_id: z.string().uuid(), // Make sure it's defined as UUID
   notes: z.string().optional(),
   subagent_id: z.string().uuid().optional().nullable(),
+  counsellor_id: z.string().uuid().optional().nullable(),
 });
 
 type ApplicationFormValues = z.infer<typeof applicationSchema>;
@@ -44,6 +46,7 @@ export function ApplicationModal() {
   const [open, setOpen] = useState(false);
   const { userRole } = useUserRole();
   const { subagents, isLoading: isLoadingSubagents } = useSubagents();
+  const { counsellors, isLoading: isLoadingCounsellors } = useCounsellors();
   const { createApplication, isCreating } = useApplications();
 
   const { data: collegesData } = useColleges();
@@ -68,6 +71,7 @@ export function ApplicationModal() {
       course_id: "",
       notes: "",
       subagent_id: null,
+      counsellor_id: null,
     },
   });
 
@@ -122,6 +126,10 @@ export function ApplicationModal() {
 
       // Set the subagent_id based on our logic above
       subagent_id: subagentId,
+
+      // Include counsellor_id if provided
+      counsellor_id: data.counsellor_id,
+
       application_status: APPLICATION_STATUS.PENDING,
     };
 
@@ -153,6 +161,7 @@ export function ApplicationModal() {
         course_id: "",
         notes: "",
         subagent_id: null,
+        counsellor_id: null,
       });
     }
     setCurrentCollege(null);
@@ -255,6 +264,40 @@ export function ApplicationModal() {
                               ? "Assign to myself"
                               :subagent.name
                               }
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {/* Counsellor selector (for agents and subagents) */}
+              {(userRole === "agent" || userRole === "sub-agent") && !isLoadingCounsellors && counsellors.length > 0 && (
+                <FormField
+                  control={form.control}
+                  name="counsellor_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Assign to Counsellor</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="border-zinc-500">
+                            <SelectValue placeholder="Select Counsellor (Optional)" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-white">
+                          {counsellors.map((counsellor) => (
+                            <SelectItem
+                              key={counsellor.user_id}
+                              value={counsellor.user_id}
+                            >
+                              {counsellor.name}
                             </SelectItem>
                           ))}
                         </SelectContent>

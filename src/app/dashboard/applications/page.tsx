@@ -33,16 +33,19 @@ import { APPLICATION_STATUS } from "@/utils/application-status";
 
 export default function ApplicationsPage() {
   const { applications, isLoading: isLoadingApplications, error: applicationsError } = useApplications();
-  const { getSubagentName, isLoading: isLoadingSubagents, error: subagentsError } = useSubagentNames();
   const { userRole } = useUserRole();
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
 
-  // Check if user is a subagent
+  // Only fetch subagent names for agents and subagents, not counsellors
+  const { getSubagentName, isLoading: isLoadingSubagents, error: subagentsError } = useSubagentNames(userRole !== "counsellor");
+
+  // Check if user is a subagent or counsellor
   const isSubagent = userRole === "sub-agent";
+  const isCounsellor = userRole === "counsellor";
 
   // Combined loading and error states
-  const isLoading = isLoadingApplications || isLoadingSubagents;
-  const error = applicationsError || subagentsError;
+  const isLoading = isLoadingApplications || (userRole !== "counsellor" && isLoadingSubagents);
+  const error = applicationsError || (userRole !== "counsellor" ? subagentsError : null);
 
   // Filter applications by status if a status is selected
   const filteredApplications = selectedStatus
@@ -94,8 +97,8 @@ export default function ApplicationsPage() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Add Application Modal */}
-          <ApplicationModal />
+          {/* Add Application Modal - only for agents and subagents */}
+          {!isCounsellor && <ApplicationModal />}
         </div>
       </div>
 
@@ -116,7 +119,7 @@ export default function ApplicationsPage() {
               <TableHead>College</TableHead>
               <TableHead>Course</TableHead>
               <TableHead>Status</TableHead>
-              {!isSubagent && <TableHead>Associate Partner</TableHead>}
+              {!isSubagent && !isCounsellor && <TableHead>Associate Partner</TableHead>}
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -133,16 +136,16 @@ export default function ApplicationsPage() {
                     currentStatus={application.application_status}
                   />
                 </TableCell>
-                {!isSubagent && (
+                {!isSubagent && !isCounsellor && (
                   <TableCell className="text-zinc-800">
                     {getSubagentName(application.subagent_id)}
                   </TableCell>
                 )}
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">
-                    {/* Show upload documents button for verified applications */}
+                    {/* Show upload documents button for verified applications - not for counsellors */}
                     {application.application_status === APPLICATION_STATUS.VERIFIED &&
-                     (userRole === "agent" || userRole === "sub-agent") && (
+                     !isCounsellor && (userRole === "agent" || userRole === "sub-agent") && (
                       <DocumentUploadModal
                         applicationId={application.id}
                         applicationStatus={application.application_status}
@@ -168,7 +171,7 @@ export default function ApplicationsPage() {
                           }
                         />
                         {application.application_status === APPLICATION_STATUS.VERIFIED &&
-                         (userRole === "agent" || userRole === "sub-agent") && (
+                         !isCounsellor && (userRole === "agent" || userRole === "sub-agent") && (
                           <DocumentUploadModal
                             applicationId={application.id}
                             applicationStatus={application.application_status}
@@ -180,7 +183,7 @@ export default function ApplicationsPage() {
                           />
                         )}
                         <DropdownMenuSeparator />
-                        { !isSubagent && (
+                        {!isSubagent && !isCounsellor && (
                         <DropdownMenuItem className="text-red-600">
                           Delete
                         </DropdownMenuItem>

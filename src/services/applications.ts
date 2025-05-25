@@ -13,6 +13,7 @@ interface ApplicationInput {
   application_status: string;
   notes?: string;
   subagent_id?: string | null;
+  counsellor_id?: string | null;
 }
 
 interface ApplicationUpdateInput {
@@ -93,6 +94,9 @@ export async function createApplication(data: ApplicationInput) {
       // If this is a subagent, set subagent_id to their own ID
       // If this is an agent, use the provided subagent_id or null
       subagent_id: agentData.super_agent !== null ? agentData.user_id : (data.subagent_id || null),
+
+      // Set counsellor_id if provided
+      counsellor_id: data.counsellor_id || null,
 
       superagent_id: superAgentId // Add the superagent_id to filter applications
     };
@@ -511,8 +515,8 @@ export async function getApplications() {
       throw new Error("No user record found");
     }
 
-    // For counsellors, get applications from their associated agent
-    return getCounsellorApplications(counsellorData.agent_id);
+    // For counsellors, get applications assigned to them
+    return getCounsellorApplications(userId);
   }
 
   // Determine if this is a main agent or subagent
@@ -601,11 +605,11 @@ export async function getApplications() {
 }
 
 /**
- * Gets applications for counsellors based on their associated agent
- * @param agentId The agent ID associated with the counsellor
+ * Gets applications for counsellors based on their counsellor_id
+ * @param counsellorId The counsellor's user ID
  * @returns Array of applications
  */
-async function getCounsellorApplications(agentId: string) {
+async function getCounsellorApplications(counsellorId: string) {
   // First, fetch all colleges to use for name lookups
   const { data: colleges, error: collegesError } = await supabase
     .from('colleges')
@@ -638,11 +642,11 @@ async function getCounsellorApplications(agentId: string) {
     courseMap.set(course.id, course.course_name);
   });
 
-  // Get all applications where superagent_id equals the agent_id
+  // Get all applications where counsellor_id equals the counsellor's user ID
   const { data, error } = await supabase
     .from('applications')
     .select('*')
-    .eq('superagent_id', agentId)
+    .eq('counsellor_id', counsellorId)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -668,4 +672,52 @@ async function getCounsellorApplications(agentId: string) {
   });
 
   return applications;
+}
+
+/**
+ * Assigns an application to a counsellor
+ * @param applicationId The application ID
+ * @param counsellorId The counsellor's user ID
+ * @returns The updated application
+ */
+export async function assignApplicationToCounsellor(applicationId: string, counsellorId: string | null) {
+  // Get current user's ID
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    throw new Error("No authenticated user found");
+  }
+
+  const userId = session.user.id;
+
+  // Check if user is an agent or subagent
+  const { data: agentData, error: agentError } = await supabase
+    .from('agents')
+    .select('super_agent, user_id')
+    .eq('user_id', userId)
+    .single();
+
+  if (agentError) {
+    console.error('Error fetching agent data:', agentError);
+    throw new Error(`Failed to fetch agent data: ${agentError.message}`);
+  }
+
+  if (!agentData) {
+    throw new Error("Only agents and subagents can assign applications to counsellors");
+  }
+
+  // Update the application
+  const { data, error } = await supabase
+    .from('applications')
+    .update({ counsellor_id: counsellorId })
+    .eq('id', applicationId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error assigning application to counsellor:', error);
+    throw new Error(`Failed to assign application to counsellor: ${error.message}`);
+  }
+
+  return data;
 }
