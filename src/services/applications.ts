@@ -45,6 +45,17 @@ export async function createApplication(data: ApplicationInput) {
       .single();
 
     if (agentError) {
+      // Check if user is a counsellor (counsellors cannot create applications)
+      const { data: counsellorData, error: counsellorError } = await supabase
+        .from('counsellors')
+        .select('user_id')
+        .eq('user_id', userId)
+        .single();
+
+      if (!counsellorError && counsellorData) {
+        throw new Error("Counsellors are not allowed to create applications");
+      }
+
       console.error('Error fetching Partner data:', agentError);
       throw new Error(`Failed to fetch Partner data: ${agentError.message}`);
     }
@@ -130,6 +141,17 @@ export async function updateApplicationStatus(applicationId: string, newStatus: 
       .single();
 
     if (agentError) {
+      // Check if user is a counsellor (counsellors cannot update application status)
+      const { data: counsellorData, error: counsellorError } = await supabase
+        .from('counsellors')
+        .select('user_id')
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (!counsellorError && counsellorData) {
+        throw new Error("Counsellors are not allowed to update application status");
+      }
+
       console.error('Error fetching Partner data:', agentError);
       throw new Error(`Failed to fetch Partner data: ${agentError.message}`);
     }
@@ -466,15 +488,31 @@ export async function getApplications() {
 
   const userId = session.user.id;
 
-  // Get the agent data
+  // First try to get agent data
   const { data: agentData, error: agentError } = await supabase
     .from('agents')
     .select('super_agent, user_id')
     .eq('user_id', userId)
     .single();
 
+  // If not found in agents table, check if user is a counsellor
   if (agentError) {
-    throw new Error(`Failed to fetch Partner data: ${agentError.message}`);
+    const { data: counsellorData, error: counsellorError } = await supabase
+      .from('counsellors')
+      .select('agent_id')
+      .eq('user_id', userId)
+      .single();
+
+    if (counsellorError) {
+      throw new Error(`Failed to fetch user data: ${counsellorError.message}`);
+    }
+
+    if (!counsellorData) {
+      throw new Error("No user record found");
+    }
+
+    // For counsellors, get applications from their associated agent
+    return getCounsellorApplications(counsellorData.agent_id);
   }
 
   // Determine if this is a main agent or subagent
@@ -543,6 +581,76 @@ export async function getApplications() {
 
     applications = data || [];
   }
+
+  // Enhance applications with college and course names
+  applications = applications.map((app: any) => {
+    // Add college name if ID exists and is in our map
+    const collegeName = collegeMap.get(app.preferred_college) || app.preferred_college;
+
+    // Add course name if ID exists and is in our map
+    const courseName = courseMap.get(app.preferred_course) || app.preferred_course;
+
+    return {
+      ...app,
+      college_name: collegeName,
+      course_name: courseName
+    };
+  });
+
+  return applications;
+}
+
+/**
+ * Gets applications for counsellors based on their associated agent
+ * @param agentId The agent ID associated with the counsellor
+ * @returns Array of applications
+ */
+async function getCounsellorApplications(agentId: string) {
+  // First, fetch all colleges to use for name lookups
+  const { data: colleges, error: collegesError } = await supabase
+    .from('colleges')
+    .select('id, name');
+
+  if (collegesError) {
+    console.error('Error fetching colleges:', collegesError);
+    throw new Error(`Failed to fetch colleges: ${collegesError.message}`);
+  }
+
+  // Create a map of college IDs to names for quick lookup
+  const collegeMap = new Map();
+  colleges.forEach((college: any) => {
+    collegeMap.set(college.id, college.name);
+  });
+
+  // Fetch all courses to use for name lookups
+  const { data: courses, error: coursesError } = await supabase
+    .from('courses')
+    .select('id, course_name');
+
+  if (coursesError) {
+    console.error('Error fetching courses:', coursesError);
+    throw new Error(`Failed to fetch courses: ${coursesError.message}`);
+  }
+
+  // Create a map of course IDs to names for quick lookup
+  const courseMap = new Map();
+  courses.forEach((course: any) => {
+    courseMap.set(course.id, course.course_name);
+  });
+
+  // Get all applications where superagent_id equals the agent_id
+  const { data, error } = await supabase
+    .from('applications')
+    .select('*')
+    .eq('superagent_id', agentId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching applications:', error);
+    throw new Error(`Failed to fetch applications: ${error.message}`);
+  }
+
+  let applications = data || [];
 
   // Enhance applications with college and course names
   applications = applications.map((app: any) => {

@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useColleges, useDeleteCollege } from "@/hooks/useColleges";
+import { useCounsellorColleges, useCounsellorCollegeSearch } from "@/hooks/useCounsellorColleges";
 import { Database } from "@/types/supabase";
 import {
   Card,
@@ -42,15 +43,33 @@ export default function CollegesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 9; // 3x3 grid
 
-  const { data, isLoading } = useColleges({
+  const { userRole } = useUserRole();
+  const isAgent = userRole === "agent";
+  const isCounsellor = userRole === "counsellor";
+
+  // Use different hooks based on user role
+  const agentCollegesQuery = useColleges({
     searchTerm: debouncedSearchTerm,
     limit: pageSize,
     offset: (currentPage - 1) * pageSize
   });
 
+  const counsellorCollegesQuery = useCounsellorColleges();
+  const counsellorSearchQuery = useCounsellorCollegeSearch(debouncedSearchTerm, isCounsellor && debouncedSearchTerm.length > 0);
+
+  // Select the appropriate data based on user role
+  const data = isCounsellor ?
+    {
+      colleges: debouncedSearchTerm.length > 0 ? counsellorSearchQuery.colleges : counsellorCollegesQuery.colleges,
+      total: debouncedSearchTerm.length > 0 ? counsellorSearchQuery.colleges.length : counsellorCollegesQuery.colleges.length
+    } :
+    agentCollegesQuery.data;
+
+  const isLoading = isCounsellor ?
+    (debouncedSearchTerm.length > 0 ? counsellorSearchQuery.isLoading : counsellorCollegesQuery.isLoading) :
+    agentCollegesQuery.isLoading;
+
   const deleteCollegeMutation = useDeleteCollege();
-  const { userRole } = useUserRole();
-  const isAgent = userRole === "agent";
 
   // Debounce search term to avoid too many requests
   useEffect(() => {
@@ -83,7 +102,9 @@ export default function CollegesPage() {
             <h1 className="text-3xl font-medium text-white flex items-center gap-2">
               Colleges Directory
             </h1>
-            <p className="text-white/60 text-sm">Manage and explore partner institutions</p>
+            <p className="text-white/60 text-sm">
+              {isCounsellor ? "Explore available institutions" : "Manage and explore partner institutions"}
+            </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
             {isAgent && <AddCollegeModal />}

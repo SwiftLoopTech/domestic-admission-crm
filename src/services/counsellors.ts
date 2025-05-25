@@ -31,7 +31,7 @@ export async function getCounsellors(): Promise<Counsellor[]> {
     const { data, error } = await supabase
       .from('counsellors')
       .select('*')
-      .eq('agent_id', userId)
+      .eq('parent_id', userId)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -66,6 +66,23 @@ export async function createCounsellor(data: CounsellorInput): Promise<Counsello
     if (!session) {
       throw new Error("No authenticated session found");
     }
+
+    // Get current user's agent data to determine the super agent
+    const { data: currentUserAgent, error: agentError } = await supabase
+      .from('agents')
+      .select('super_agent')
+      .eq('user_id', userId)
+      .single();
+
+    if (agentError) {
+      console.error("Error fetching current user agent data:", agentError);
+      throw new Error("Failed to fetch user data");
+    }
+
+    // Determine agent_id based on the logic:
+    // - If current user has a super_agent, use that as agent_id
+    // - Otherwise, use current user's ID as agent_id
+    const agentId = currentUserAgent.super_agent || userId;
 
     // Check if user already has 2 counsellors
     const existingCounsellors = await getCounsellors();
@@ -106,11 +123,12 @@ export async function createCounsellor(data: CounsellorInput): Promise<Counsello
 
     // Create the counsellor record
     const counsellorData: CreateCounsellorInput = {
-      id: authData.user.id, // Use the actual user ID from Auth
+      user_id: authData.user.id, // Use the actual user ID from Auth
       name: data.name,
       email: data.email,
       phone: data.phone,
-      agent_id: userId, // Set the current user as the agent who created this counsellor
+      parent_id: userId, // The user who created this counsellor
+      agent_id: agentId, // The super agent or the current user if they are the agent
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -158,7 +176,7 @@ export async function updateCounsellor(id: string, data: Partial<CounsellorInput
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
-      .eq('agent_id', userId) // Ensure user can only update their own counsellors
+      .eq('parent_id', userId) // Ensure user can only update their own counsellors
       .select()
       .single();
 
@@ -194,7 +212,7 @@ export async function deleteCounsellor(id: string): Promise<void> {
       .from('counsellors')
       .delete()
       .eq('id', id)
-      .eq('agent_id', userId); // Ensure user can only delete their own counsellors
+      .eq('parent_id', userId); // Ensure user can only delete their own counsellors
 
     if (error) {
       console.error("Error deleting counsellor:", error);

@@ -17,7 +17,7 @@ import {
   UserCheck
 } from "lucide-react";
 import { supabase } from "@/utils/supabase";
-import { useAgentData } from "@/hooks/useAgentData";
+import { useCurrentUserData } from "@/hooks/useCurrentUserData";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -45,8 +45,8 @@ export function Sidebar({ userRole }: SidebarProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
-  // Use the hook to fetch agent data
-  const { agent } = useAgentData();
+  // Use the hook to fetch user data
+  const { user } = useCurrentUserData();
 
   // Handle sign out
   const handleSignOut = async () => {
@@ -123,18 +123,18 @@ export function Sidebar({ userRole }: SidebarProps) {
   };
 
   const navItems = getNavItems();
-  // Get user initials from agent name
+  // Get user initials from user name
   const getUserInitials = () => {
-    if (!agent?.name) return "NA";
+    if (!user?.name) return "NA";
 
-    const nameParts = agent.name.trim().split(/\s+/);
+    const nameParts = user.name.trim().split(/\s+/);
     if (nameParts.length === 1) return nameParts[0].substring(0, 2).toUpperCase();
 
     return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
   };
 
   const userInitials = getUserInitials();
-  const userName = agent?.name || "Loading...";
+  const userName = user?.name || "Loading...";
 
 
   const sidebarContent = (

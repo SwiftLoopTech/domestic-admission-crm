@@ -30,7 +30,7 @@ export function useDashboardStats() {
     enabled: userRole === "agent",
   });
 
-  // Fetch counsellors
+  // Fetch counsellors (only if user is an agent or subagent)
   const {
     data: counsellors = [],
     isLoading: isLoadingCounsellors,
@@ -38,6 +38,7 @@ export function useDashboardStats() {
   } = useQuery({
     queryKey: ["counsellors"],
     queryFn: getCounsellors,
+    enabled: userRole === "agent" || userRole === "sub-agent",
   });
 
   // Calculate stats
@@ -47,7 +48,7 @@ export function useDashboardStats() {
     counsellorsCount: counsellors.length,
   };
 
-  const isLoading = isLoadingApplications || (userRole === "agent" && isLoadingSubagents) || isLoadingCounsellors;
+  const isLoading = isLoadingApplications || (userRole === "agent" && isLoadingSubagents) || ((userRole === "agent" || userRole === "sub-agent") && isLoadingCounsellors);
   const error = applicationsError || subagentsError || counsellorsError;
 
   return {

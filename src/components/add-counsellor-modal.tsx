@@ -52,17 +52,25 @@ export function AddCounsellorModal({ trigger }: AddCounsellorModalProps) {
     },
   });
 
-  const onSubmit = async (data: CounsellorFormValues) => {
-    try {
-      createCounsellor(data);
-      setOpen(false);
-      form.reset();
-    } catch (error) {
-      console.error("Error creating counsellor:", error);
-    }
+  const onSubmit = (data: CounsellorFormValues) => {
+    createCounsellor(data, {
+      onSuccess: () => {
+        setOpen(false);
+        form.reset();
+      },
+      onError: (error) => {
+        console.error("Error creating counsellor:", error);
+        // Error toast is already handled in the hook
+      }
+    });
   };
 
   const handleOpenChange = (open: boolean) => {
+    // Prevent closing the modal while creating
+    if (isCreating && !open) {
+      return;
+    }
+
     setOpen(open);
     if (!open) {
       form.reset();
@@ -96,6 +104,19 @@ export function AddCounsellorModal({ trigger }: AddCounsellorModalProps) {
           </DialogDescription>
         </DialogHeader>
 
+        {/* Loading overlay */}
+        {isCreating && (
+          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50 rounded-lg">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="h-8 w-8 animate-spin text-[#FFC11F]" />
+              <p className="text-sm font-medium text-gray-700">Creating counsellor account...</p>
+              <p className="text-xs text-gray-500 text-center max-w-xs">
+                This may take a few moments. Please don't close this window.
+              </p>
+            </div>
+          </div>
+        )}
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -109,6 +130,7 @@ export function AddCounsellorModal({ trigger }: AddCounsellorModalProps) {
                       placeholder="Enter counsellor's full name"
                       {...field}
                       className="border-zinc-400"
+                      disabled={isCreating}
                     />
                   </FormControl>
                   <FormMessage />
@@ -128,6 +150,7 @@ export function AddCounsellorModal({ trigger }: AddCounsellorModalProps) {
                       placeholder="Enter email address"
                       {...field}
                       className="border-zinc-400"
+                      disabled={isCreating}
                     />
                   </FormControl>
                   <FormMessage />
@@ -147,6 +170,7 @@ export function AddCounsellorModal({ trigger }: AddCounsellorModalProps) {
                       placeholder="Enter phone number"
                       {...field}
                       className="border-zinc-400"
+                      disabled={isCreating}
                     />
                   </FormControl>
                   <FormMessage />
@@ -166,6 +190,7 @@ export function AddCounsellorModal({ trigger }: AddCounsellorModalProps) {
                       placeholder="Enter password"
                       {...field}
                       className="border-zinc-400"
+                      disabled={isCreating}
                     />
                   </FormControl>
                   <FormMessage />
@@ -183,7 +208,7 @@ export function AddCounsellorModal({ trigger }: AddCounsellorModalProps) {
                 onClick={() => setOpen(false)}
                 disabled={isCreating}
               >
-                Cancel
+                {isCreating ? "Please wait..." : "Cancel"}
               </Button>
               <Button
                 type="submit"
@@ -193,7 +218,7 @@ export function AddCounsellorModal({ trigger }: AddCounsellorModalProps) {
                 {isCreating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating...
+                    Creating Counsellor...
                   </>
                 ) : (
                   "Create Counsellor"
