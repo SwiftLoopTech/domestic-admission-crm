@@ -5,7 +5,7 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { useCommissions } from "@/hooks/useCommissions";
 import { updateCommission } from "@/services/commissions";
 import { useUserRole } from "@/hooks/useUserRole";
-import { useAgentData } from "@/hooks/useAgentData";
+import { useCurrentUserData } from "@/hooks/useCurrentUserData";
 import { format } from "date-fns";
 import {
   Card,
@@ -55,12 +55,12 @@ export default function CommissionsPage() {
   const { transactions, isLoading: isLoadingTransactions } = useTransactions();
   const { commissions, isLoading: isLoadingCommissions } = useCommissions();
   const { userRole } = useUserRole();
-  const { agent } = useAgentData();
+  const { user } = useCurrentUserData();
   const isAgent = userRole === "agent";
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCommission, setSelectedCommission] = useState<any>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const { getSubagentName, isLoading: isLoadingSubagents } = useSubagentNames();
+  const { getSubagentName, isLoading: isLoadingSubagents } = useSubagentNames(userRole !== "counsellor");
 
   // Filter completed transactions only
   const completedTransactions = transactions.filter(

@@ -50,7 +50,7 @@ import {
 export default function WalletPage() {
   const { transactions, isLoading } = useTransactions();
   const { userRole } = useUserRole();
-  const { getSubagentName, isLoading: isLoadingSubagents } = useSubagentNames();
+  const { getSubagentName, isLoading: isLoadingSubagents } = useSubagentNames(userRole !== "counsellor");
   const isAgent = userRole === "agent";
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);

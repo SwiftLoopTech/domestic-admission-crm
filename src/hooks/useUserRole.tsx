@@ -4,7 +4,7 @@ import { createContext, useContext, ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getUserRole } from "@/utils/agents.supabase";
 
-type UserRole = "agent" | "sub-agent" | null;
+type UserRole = "agent" | "sub-agent" | "counsellor" | null;
 
 interface UserRoleContextType {
   userRole: UserRole;

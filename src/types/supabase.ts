@@ -347,6 +347,42 @@ export type Database = {
           }
         ]
       }
+      counsellors: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          email: string
+          phone: string
+          parent_id: string
+          agent_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          email: string
+          phone: string
+          parent_id: string
+          agent_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          email?: string
+          phone?: string
+          parent_id?: string
+          agent_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

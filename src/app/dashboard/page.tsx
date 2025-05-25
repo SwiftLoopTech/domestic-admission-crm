@@ -5,16 +5,16 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApplicationModal } from "@/components/application-modal";
-import { useAgentData } from "@/hooks/useAgentData";
+import { useCurrentUserData } from "@/hooks/useCurrentUserData";
 import { SelectContent, SelectTrigger, Select, SelectItem, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ArrowBigLeft, ChevronRight, GraduationCap, SearchIcon } from "lucide-react";
+import { ChevronRight, GraduationCap, SearchIcon } from "lucide-react";
 import Link from "next/link";
 
 export default function DashboardPage() {
   const { userRole, isLoading: isLoadingRole, error: roleError } = useUserRole();
-  const { agent } = useAgentData();
-  const { name } = agent || { name: "User" };
+  const { user } = useCurrentUserData();
+  const { name } = user || { name: "User" };
   const { stats, isLoading: isLoadingStats, error: statsError } = useDashboardStats();
   const isLoading = isLoadingRole || isLoadingStats;
   const error = roleError || statsError;
@@ -24,6 +24,7 @@ export default function DashboardPage() {
   }
 
   if (error) {
+    console.error('Dashboard Error:', error);
     return (
       <div className="p-6 bg-red-50 border border-red-200 rounded-md">
         <h2 className="text-xl font-semibold text-red-600 mb-2">Error</h2>
@@ -39,7 +40,8 @@ export default function DashboardPage() {
           Welcome, {name}!
         </h1>
 
-        <ApplicationModal />
+        {/* Only show ApplicationModal for agents and subagents */}
+        {(userRole === "agent" || userRole === "sub-agent") && <ApplicationModal />}
       </div>
 
       {userRole === "agent" ? (
@@ -126,10 +128,10 @@ export default function DashboardPage() {
             </Card>
             <Card className="gap-3 h-fit w-2xs border-zinc-400 shadow-md hover:shadow-xl transition duration-200">
               <CardHeader className="">
-                <CardTitle className="text-sm text-zinc-700 font-medium">Offers</CardTitle>
+                <CardTitle className="text-sm text-zinc-700 font-medium">Counsellors</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-4xl font-medium">10</p>
+                <p className="text-4xl font-medium">{stats.counsellorsCount}</p>
               </CardContent>
             </Card>
             <Card className="gap-3 h-fit w-2xs border-zinc-400 shadow-md hover:shadow-xl transition duration-200">
@@ -169,7 +171,7 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      ) : (
+      ) : userRole === "sub-agent" ? (
         <div>
           <p className="mb-9">Welcome to the Associate Partner dashboard.</p>
           {/* Sub-agent-specific content */}
@@ -230,10 +232,10 @@ export default function DashboardPage() {
             </Card>
             <Card className="gap-3 h-fit w-2xs border-zinc-400 shadow-md hover:shadow-xl transition duration-200">
               <CardHeader className="">
-                <CardTitle className="text-sm text-zinc-700 font-medium">Offers</CardTitle>
+                <CardTitle className="text-sm text-zinc-700 font-medium">Counsellors</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-4xl font-medium">10</p>
+                <p className="text-4xl font-medium">{stats.counsellorsCount}</p>
               </CardContent>
             </Card>
             <Card className="gap-3 h-fit w-2xs border-zinc-400 shadow-md hover:shadow-xl transition duration-200">
@@ -270,7 +272,46 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      )}
+      ) : userRole === "counsellor" ? (
+        <div>
+          <p className="mb-9">Welcome to the Counsellor dashboard.</p>
+          {/* Counsellor-specific content */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Card className="gap-3 h-fit w-2xs border-zinc-400 shadow-md hover:shadow-xl transition duration-200">
+              <CardHeader className="">
+                <CardTitle className="text-sm text-zinc-700 font-medium">My Applications</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-medium">{stats.applicationsCount}</p>
+              </CardContent>
+            </Card>
+            <Card className="gap-3 h-fit w-2xs border-zinc-400 shadow-md hover:shadow-xl transition duration-200">
+              <CardHeader className="">
+                <CardTitle className="text-sm text-zinc-700 font-medium">Colleges</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-4xl font-medium">4</p>
+              </CardContent>
+            </Card>
+          </div>
+          <div className="flex gap-5">
+            <div className="w-xs mt-12">
+              <div className="bg-[#FFC11F44] w-fit p-2 rounded-lg text-[#FFC11F]">
+                <SearchIcon width={24} height={24} />
+              </div>
+              <Link href="/dashboard/colleges" className="text-xl mt-3 hover:underline cursor-pointer flex gap-1 items-start">View Colleges <ChevronRight width={20} /></Link>
+              <p className="text-sm mt-2 text-zinc-600">Explore colleges and courses available through the platform.</p>
+            </div>
+            <div className="w-xs mt-12">
+              <div className="bg-[#FFC11F44] w-fit p-2 rounded-lg text-[#FFC11F]">
+                <GraduationCap width={24} height={24} />
+              </div>
+              <Link href="/dashboard/applications" className="text-xl mt-3 hover:underline cursor-pointer flex gap-1 items-start">Students<ChevronRight width={20} /></Link>
+              <p className="text-sm mt-2 text-zinc-600">Explore students applying through the platform.</p>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }
