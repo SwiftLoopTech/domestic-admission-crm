@@ -145,19 +145,36 @@ export async function getAgentData(): Promise<AgentData | null> {
 }
 
 /**
- * Determines if the current user is an agent or subagent
- * @returns An object with the user role and agent data
+ * Determines if the current user is an agent, subagent, or counsellor
+ * @returns An object with the user role and user data
  */
 export async function getUserRole() {
-  const agentData = await getAgentData();
+  const userId = await getCurrentUserId();
 
-  if (!agentData) {
+  if (!userId) {
     return { role: null, agent: null };
   }
 
-  const role = agentData.super_agent === null ? "agent" : "sub-agent";
+  // First check if user is an agent or subagent
+  const agentData = await getAgentData();
 
-  return { role, agent: agentData };
+  if (agentData) {
+    const role = agentData.super_agent === null ? "agent" : "sub-agent";
+    return { role, agent: agentData };
+  }
+
+  // If not an agent/subagent, check if user is a counsellor
+  const { data: counsellorData, error: counsellorError } = await supabase
+    .from('counsellors')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+
+  if (!counsellorError && counsellorData) {
+    return { role: "counsellor", agent: counsellorData };
+  }
+
+  return { role: null, agent: null };
 }
 
 export async function getSubagents() {
@@ -173,7 +190,7 @@ export async function getSubagents() {
     .from("agents")
     .select('user_id, name, email, created_at')
     .eq('user_id', userId);
-    
+
     if (agentError) {
       console.error("Error fetching agent data:", agentError);
       throw new Error(`Failed to fetch agent: ${agentError.message}`);

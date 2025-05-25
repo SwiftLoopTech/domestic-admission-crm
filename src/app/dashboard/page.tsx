@@ -126,10 +126,10 @@ export default function DashboardPage() {
             </Card>
             <Card className="gap-3 h-fit w-2xs border-zinc-400 shadow-md hover:shadow-xl transition duration-200">
               <CardHeader className="">
-                <CardTitle className="text-sm text-zinc-700 font-medium">Offers</CardTitle>
+                <CardTitle className="text-sm text-zinc-700 font-medium">Counsellors</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-4xl font-medium">10</p>
+                <p className="text-4xl font-medium">{stats.counsellorsCount}</p>
               </CardContent>
             </Card>
             <Card className="gap-3 h-fit w-2xs border-zinc-400 shadow-md hover:shadow-xl transition duration-200">
@@ -230,10 +230,10 @@ export default function DashboardPage() {
             </Card>
             <Card className="gap-3 h-fit w-2xs border-zinc-400 shadow-md hover:shadow-xl transition duration-200">
               <CardHeader className="">
-                <CardTitle className="text-sm text-zinc-700 font-medium">Offers</CardTitle>
+                <CardTitle className="text-sm text-zinc-700 font-medium">Counsellors</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-4xl font-medium">10</p>
+                <p className="text-4xl font-medium">{stats.counsellorsCount}</p>
               </CardContent>
             </Card>
             <Card className="gap-3 h-fit w-2xs border-zinc-400 shadow-md hover:shadow-xl transition duration-200">

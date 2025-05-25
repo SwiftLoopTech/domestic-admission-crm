@@ -6,16 +6,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   LucideHome,
-  LucideUsers,
   LucideFolderOpen,
   LucideLogOut,
   LucideUserPlus,
   LucideMenu,
-  LucideX,
   LucideChevronRight,
   LucideUniversity,
   HandCoins,
-  Wallet
+  Wallet,
+  UserCheck
 } from "lucide-react";
 import { supabase } from "@/utils/supabase";
 import { useAgentData } from "@/hooks/useAgentData";
@@ -23,7 +22,6 @@ import { useAgentData } from "@/hooks/useAgentData";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import {
   Tooltip,
   TooltipProvider,
@@ -37,10 +35,9 @@ import {
   SheetTitle
 } from "@/components/ui/sheet";
 import { VisuallyHidden } from "@/components/ui/visually-hidden";
-import { Badge } from "@/components/ui/badge";
 
 interface SidebarProps {
-  userRole: "agent" | "sub-agent" | null;
+  userRole: "agent" | "sub-agent" | "counsellor" | null;
 }
 
 export function Sidebar({ userRole }: SidebarProps) {
@@ -49,7 +46,7 @@ export function Sidebar({ userRole }: SidebarProps) {
   const [open, setOpen] = useState(false);
 
   // Use the hook to fetch agent data
-  const { agent, isLoading: isLoadingAgent } = useAgentData();
+  const { agent } = useAgentData();
 
   // Handle sign out
   const handleSignOut = async () => {
@@ -63,6 +60,7 @@ export function Sidebar({ userRole }: SidebarProps) {
 
   // Define navigation items based on user role
   const getNavItems = () => {
+    // Base items for all users
     const baseItems = [
       {
         name: "Dashboard",
@@ -80,6 +78,20 @@ export function Sidebar({ userRole }: SidebarProps) {
         href: "/dashboard/colleges",
         icon: LucideUniversity
       },
+    ];
+
+    // Items for counsellors (only dashboard, applications, colleges)
+    if (userRole === "counsellor") {
+      return baseItems;
+    }
+
+    // Additional items for agents and subagents
+    const agentSubagentItems = [
+      {
+        name: "Counsellors",
+        href: "/dashboard/counsellors",
+        icon: UserCheck
+      },
       {
         name: "Wallet",
         href: "/dashboard/wallet",
@@ -92,7 +104,7 @@ export function Sidebar({ userRole }: SidebarProps) {
       },
     ];
 
-    // Items only for Partners (not associate partners)
+    // Items only for Partners (not associate partners or counsellors)
     const agentOnlyItems = [
       {
         name: "Associate Partners",
@@ -101,7 +113,13 @@ export function Sidebar({ userRole }: SidebarProps) {
       },
     ];
 
-    return userRole === "agent" ? [...baseItems, ...agentOnlyItems] : [...baseItems];
+    if (userRole === "agent") {
+      return [...baseItems, ...agentSubagentItems, ...agentOnlyItems];
+    } else if (userRole === "sub-agent") {
+      return [...baseItems, ...agentSubagentItems];
+    }
+
+    return baseItems;
   };
 
   const navItems = getNavItems();
@@ -135,7 +153,7 @@ export function Sidebar({ userRole }: SidebarProps) {
               {userName}
             </span>
             <span className="text-xs text-teal-50">
-              {userRole === "agent" ? "Partner" : "Associate Partner"}
+              {userRole === "agent" ? "Partner" : userRole === "sub-agent" ? "Associate Partner" : "Counsellor"}
             </span>
           </div>
         </div>
