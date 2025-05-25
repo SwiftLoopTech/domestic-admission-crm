@@ -1,6 +1,7 @@
 
 import { supabase } from "@/utils/supabase";
 import { College, CollegeWithCourses, CreateCollegeInput, UpdateCollegeInput } from "@/types/colleges";
+import { getCurrentUserId } from "@/utils/agents.supabase";
 
 export interface CollegeFilters {
   location?: string;
@@ -14,10 +15,22 @@ export const collegeService = {
    * Create a new college
    */
   async createCollege(brochureFile:File|null,input: CreateCollegeInput): Promise<College> {
+    // Get current user's ID to set as agent_id
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+      throw new Error("No authenticated user found");
+    }
+
+    // Ensure agent_id is set to the current user's ID
+    const collegeData = {
+      ...input,
+      agent_id: userId,
+    };
 
     const { data, error } = await supabase
       .from('colleges')
-      .insert([input])
+      .insert([collegeData])
       .select()
       .single();
 
@@ -35,6 +48,36 @@ export const collegeService = {
    * Get a single college by ID
    */
   async getCollege(id: string): Promise<CollegeWithCourses | null> {
+    // Get current user's ID to filter colleges
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+      throw new Error("No authenticated user found");
+    }
+
+    // Determine user's agent ID for filtering (same logic as getColleges)
+    const { data: agentData, error: agentError } = await supabase
+      .from('agents')
+      .select('user_id, super_agent')
+      .eq('user_id', userId)
+      .single();
+
+    let agentId = userId;
+
+    if (!agentError && agentData) {
+      agentId = agentData.super_agent || agentData.user_id;
+    } else {
+      const { data: counsellorData, error: counsellorError } = await supabase
+        .from('counsellors')
+        .select('agent_id')
+        .eq('user_id', userId)
+        .single();
+
+      if (!counsellorError && counsellorData) {
+        agentId = counsellorData.agent_id;
+      }
+    }
+
     const { data, error } = await supabase
       .from('colleges')
       .select(`
@@ -47,6 +90,7 @@ export const collegeService = {
         )
       `)
       .eq('id', id)
+      .eq('agent_id', agentId)
       .single();
 
     if (error) {
@@ -62,9 +106,45 @@ export const collegeService = {
    */
   async getColleges(filters?: CollegeFilters) {
     console.log("This was called")
+
+    // Get current user's ID to filter colleges
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+      throw new Error("No authenticated user found");
+    }
+
+    // Determine user's agent ID for filtering
+    // First check if user is an agent or subagent
+    const { data: agentData, error: agentError } = await supabase
+      .from('agents')
+      .select('user_id, super_agent')
+      .eq('user_id', userId)
+      .single();
+
+    let agentId = userId; // Default to current user
+
+    if (!agentError && agentData) {
+      // If user is a subagent, use their super_agent as the filter
+      // If user is an agent, use their own ID
+      agentId = agentData.super_agent || agentData.user_id;
+    } else {
+      // If not found in agents table, check if user is a counsellor
+      const { data: counsellorData, error: counsellorError } = await supabase
+        .from('counsellors')
+        .select('agent_id')
+        .eq('user_id', userId)
+        .single();
+
+      if (!counsellorError && counsellorData) {
+        agentId = counsellorData.agent_id;
+      }
+    }
+
     let query = supabase
       .from('colleges')
-      .select('*', { count: 'exact' });
+      .select('*', { count: 'exact' })
+      .eq('agent_id', agentId); // Filter by agent_id
 
     // Apply filters
     if (filters?.location) {
@@ -191,9 +271,40 @@ export const collegeService = {
    * Search colleges by name or location
    */
   async searchColleges(searchTerm: string) {
+    // Get current user's ID to filter colleges
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+      throw new Error("No authenticated user found");
+    }
+
+    // Determine user's agent ID for filtering (same logic as getColleges)
+    const { data: agentData, error: agentError } = await supabase
+      .from('agents')
+      .select('user_id, super_agent')
+      .eq('user_id', userId)
+      .single();
+
+    let agentId = userId;
+
+    if (!agentError && agentData) {
+      agentId = agentData.super_agent || agentData.user_id;
+    } else {
+      const { data: counsellorData, error: counsellorError } = await supabase
+        .from('counsellors')
+        .select('agent_id')
+        .eq('user_id', userId)
+        .single();
+
+      if (!counsellorError && counsellorData) {
+        agentId = counsellorData.agent_id;
+      }
+    }
+
     const { data, error } = await supabase
       .from('colleges')
       .select('*')
+      .eq('agent_id', agentId)
       .or(`
         name.ilike.%${searchTerm}%,
         location.ilike.%${searchTerm}%
@@ -212,11 +323,42 @@ export const collegeService = {
    * Check if a college exists with given name and place
    */
   async checkCollegeExists(name: string, place: string): Promise<boolean> {
+    // Get current user's ID to filter colleges
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+      throw new Error("No authenticated user found");
+    }
+
+    // Determine user's agent ID for filtering (same logic as getColleges)
+    const { data: agentData, error: agentError } = await supabase
+      .from('agents')
+      .select('user_id, super_agent')
+      .eq('user_id', userId)
+      .single();
+
+    let agentId = userId;
+
+    if (!agentError && agentData) {
+      agentId = agentData.super_agent || agentData.user_id;
+    } else {
+      const { data: counsellorData, error: counsellorError } = await supabase
+        .from('counsellors')
+        .select('agent_id')
+        .eq('user_id', userId)
+        .single();
+
+      if (!counsellorError && counsellorData) {
+        agentId = counsellorData.agent_id;
+      }
+    }
+
     const { data, error } = await supabase
       .from('colleges')
       .select('id')
       .eq('name', name)
       .eq('location', place)
+      .eq('agent_id', agentId)
       .single();
 
     if (error && error.code !== 'PGRST116') { // PGRST116 is "not found" error
@@ -231,11 +373,42 @@ export const collegeService = {
    * Get a college by name and place
    */
   async getCollegeByNameAndPlace(name: string, place: string): Promise<College | null> {
+    // Get current user's ID to filter colleges
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+      throw new Error("No authenticated user found");
+    }
+
+    // Determine user's agent ID for filtering (same logic as getColleges)
+    const { data: agentData, error: agentError } = await supabase
+      .from('agents')
+      .select('user_id, super_agent')
+      .eq('user_id', userId)
+      .single();
+
+    let agentId = userId;
+
+    if (!agentError && agentData) {
+      agentId = agentData.super_agent || agentData.user_id;
+    } else {
+      const { data: counsellorData, error: counsellorError } = await supabase
+        .from('counsellors')
+        .select('agent_id')
+        .eq('user_id', userId)
+        .single();
+
+      if (!counsellorError && counsellorData) {
+        agentId = counsellorData.agent_id;
+      }
+    }
+
     const { data, error } = await supabase
       .from('colleges')
       .select()
       .eq('name', name)
       .eq('location', place)
+      .eq('agent_id', agentId)
       .single();
 
     if (error) {

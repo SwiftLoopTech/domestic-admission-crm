@@ -79,7 +79,6 @@ export function AddCollegeModal(){
       location: "",
       website_url: null,
       contact_number: null,
-      agent_id: null,
       brochure_url: null,
       created_at: null,
       updated_at: null,

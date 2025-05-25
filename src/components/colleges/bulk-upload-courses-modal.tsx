@@ -174,7 +174,6 @@ export function BulkUploadCoursesModal() {
               location: college.place,
               website_url: null,
               contact_number: null,
-              agent_id: null,
               brochure_url: null,
             }
           })
